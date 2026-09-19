@@ -1,0 +1,21 @@
+{
+  "name": "ScrapDash.EditModeTests",
+  "rootNamespace": "ScrapDash.Tests",
+  "references": [
+    "ScrapDash.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}
