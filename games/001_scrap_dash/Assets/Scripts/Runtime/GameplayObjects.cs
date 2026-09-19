@@ -30,6 +30,9 @@ namespace ScrapDash
         [SerializeField] private float rightX;
         [SerializeField] private float speed = 2.6f;
         private int _direction = 1;
+        private bool _defeated;
+
+        public bool Defeated => _defeated;
 
         public void Configure(float left, float right, float moveSpeed)
         {
@@ -60,7 +63,20 @@ namespace ScrapDash
         private void OnTriggerEnter2D(Collider2D other)
         {
             var player = other.GetComponent<PlayerController>();
-            if (player != null) player.TakeHit(transform.position);
+            if (player == null || _defeated) return;
+
+            var isStomp = player.Body.linearVelocity.y < -0.5f
+                && player.transform.position.y > transform.position.y + 0.2f;
+            if (isStomp)
+            {
+                _defeated = true;
+                player.Bounce(9.5f);
+                ScrapDashGame.Instance?.NotifyEnemyDefeated();
+                Destroy(gameObject);
+                return;
+            }
+
+            player.TakeHit(transform.position);
         }
     }
 
@@ -73,6 +89,9 @@ namespace ScrapDash
         private Rigidbody2D _body;
         private float _distance;
         private float _travel;
+        private Vector2 _velocity;
+
+        public Vector2 Velocity => _velocity;
 
         public void Configure(Vector2 a, Vector2 b, float moveSpeed)
         {
@@ -96,7 +115,9 @@ namespace ScrapDash
             _travel += speed * Time.fixedDeltaTime;
             var loop = Mathf.PingPong(_travel, _distance);
             var t = loop / _distance;
-            _body.MovePosition(Vector2.Lerp(pointA, pointB, t));
+            var target = Vector2.Lerp(pointA, pointB, t);
+            _velocity = (target - _body.position) / Time.fixedDeltaTime;
+            _body.MovePosition(target);
         }
     }
 

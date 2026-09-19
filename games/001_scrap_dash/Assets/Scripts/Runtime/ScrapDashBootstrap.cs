@@ -84,6 +84,10 @@ namespace ScrapDash
             ProceduralVisuals.Rect("EyeLeft", new Vector2(-0.18f, 0.52f), new Vector2(0.1f, 0.1f), Background, visual.transform, 22);
             ProceduralVisuals.Rect("EyeRight", new Vector2(0.18f, 0.52f), new Vector2(0.1f, 0.1f), Background, visual.transform, 22);
             ProceduralVisuals.Rect("Core", new Vector2(0f, -0.08f), new Vector2(0.28f, 0.28f), Yellow, visual.transform, 22);
+            ProceduralVisuals.Rect("Antenna", new Vector2(0.18f, 0.86f), new Vector2(0.08f, 0.34f), Yellow, visual.transform, 20);
+            ProceduralVisuals.Rect("AntennaTip", new Vector2(0.18f, 1.04f), new Vector2(0.18f, 0.18f), Danger, visual.transform, 22);
+            ProceduralVisuals.Rect("ArmLeft", new Vector2(-0.52f, -0.03f), new Vector2(0.2f, 0.48f), Blue, visual.transform, 19);
+            ProceduralVisuals.Rect("ArmRight", new Vector2(0.52f, -0.03f), new Vector2(0.2f, 0.48f), Blue, visual.transform, 19);
             ProceduralVisuals.Rect("FootLeft", new Vector2(-0.25f, -0.55f), new Vector2(0.25f, 0.18f), Blue, visual.transform, 21);
             ProceduralVisuals.Rect("FootRight", new Vector2(0.25f, -0.55f), new Vector2(0.25f, 0.18f), Blue, visual.transform, 21);
 
@@ -144,6 +148,9 @@ namespace ScrapDash
             var patrol = enemy.AddComponent<PatrolEnemy>();
             patrol.Configure(11.2f, 14.2f, 2.4f);
             ProceduralVisuals.Rect("EnemyEye", new Vector2(0.18f, 0.1f), new Vector2(0.18f, 0.18f), Yellow, enemy.transform, 13);
+            ProceduralVisuals.Rect("EnemyJaw", new Vector2(0f, -0.34f), new Vector2(0.65f, 0.12f), Danger, enemy.transform, 13);
+            ProceduralVisuals.Rect("EnemyWheelLeft", new Vector2(-0.3f, -0.55f), new Vector2(0.24f, 0.24f), Surface, enemy.transform, 13);
+            ProceduralVisuals.Rect("EnemyWheelRight", new Vector2(0.3f, -0.55f), new Vector2(0.24f, 0.24f), Surface, enemy.transform, 13);
 
             var magnet = ProceduralVisuals.Rect("MagnetLiftZone", new Vector2(17.1f, 0f), new Vector2(2.1f, 5.2f), new Color(0.0f, 0.55f, 1f, 0.16f), parent, 5);
             var magnetCollider = magnet.AddComponent<BoxCollider2D>();

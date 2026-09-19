@@ -12,6 +12,7 @@ namespace ScrapDash
         private Vector2 _checkpoint;
         private int _scrap;
         private int _hits;
+        private int _enemiesDefeated;
         private bool _paused;
         private bool _won;
         private string _message = string.Empty;
@@ -21,7 +22,9 @@ namespace ScrapDash
         public int Hits => _hits;
         public bool Won => _won;
         public bool Paused => _paused;
+        public bool BlocksPlayerControl => _paused || _won;
         public Vector2 Checkpoint => _checkpoint;
+        public int EnemiesDefeated => _enemiesDefeated;
 
         private void Awake()
         {
@@ -61,6 +64,12 @@ namespace ScrapDash
         {
             _hits++;
             ShowMessage("OUCH! Recalibrating...");
+        }
+
+        public void NotifyEnemyDefeated()
+        {
+            _enemiesDefeated++;
+            ShowMessage("TOY BOT RECYCLED!");
         }
 
         public void ActivateCheckpoint(Vector2 point)
@@ -151,7 +160,7 @@ namespace ScrapDash
             GUI.Label(new Rect(34, 28, 330, 34), $"SCRAP  {_scrap}/{LevelDefinition.TotalScrap}", hudStyle);
             GUI.Label(
                 new Rect(34, 64, 330, 28),
-                $"Goal: {LevelDefinition.ScrapRequiredForFinish}  •  Hits: {_hits}",
+                $"Goal: {LevelDefinition.ScrapRequiredForFinish}  •  Bots: {_enemiesDefeated}/{LevelDefinition.EnemyCount}  •  Hits: {_hits}",
                 new GUIStyle(hudStyle) { fontSize = Mathf.Max(15, hudStyle.fontSize - 5) }
             );
 

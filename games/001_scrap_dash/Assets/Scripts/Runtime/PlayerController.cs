@@ -35,6 +35,8 @@ namespace ScrapDash
         private bool _jumpHeld;
         private int _facing = 1;
         private float _invulnerableUntil;
+        private Vector2 _supportVelocity;
+        private MovingPlatform _supportPlatform;
 
         public bool IsGrounded => _groundContacts.Count > 0;
         public bool IsDashing => _dashRemaining > 0f;
@@ -93,6 +95,13 @@ namespace ScrapDash
 
         private void Update()
         {
+            if (ScrapDashGame.Instance?.BlocksPlayerControl == true)
+            {
+                _moveX = 0f;
+                _jumpBufferRemaining = 0f;
+                return;
+            }
+
             _moveX = Mathf.Clamp(_move.ReadValue<float>(), -1f, 1f);
             _jumpHeld = _jump.IsPressed();
 
@@ -145,10 +154,14 @@ namespace ScrapDash
             {
                 _jumpBufferRemaining = 0f;
                 _coyoteRemaining = 0f;
-                _body.linearVelocity = new Vector2(_body.linearVelocity.x, jumpVelocity);
+                _body.linearVelocity = new Vector2(
+                    _body.linearVelocity.x,
+                    jumpVelocity + Mathf.Max(0f, _supportVelocity.y)
+                );
             }
 
-            var targetX = _moveX * maxRunSpeed;
+            var platformVelocity = IsGrounded ? _supportVelocity : Vector2.zero;
+            var targetX = platformVelocity.x + _moveX * maxRunSpeed;
             var acceleration = IsGrounded ? groundAcceleration : airAcceleration;
             var nextX = Mathf.MoveTowards(_body.linearVelocity.x, targetX, acceleration * Time.fixedDeltaTime);
             _body.linearVelocity = new Vector2(nextX, _body.linearVelocity.y);
@@ -194,9 +207,22 @@ namespace ScrapDash
             ScrapDashGame.Instance?.NotifyHit();
         }
 
+        public void Bounce(float velocity)
+        {
+            EndDash();
+            _groundContacts.Clear();
+            _supportPlatform = null;
+            _supportVelocity = Vector2.zero;
+            _body.linearVelocity = new Vector2(_body.linearVelocity.x, velocity);
+        }
+
         public void ResetMotion()
         {
             EndDash();
+            _groundContacts.Clear();
+            _supportPlatform = null;
+            _supportVelocity = Vector2.zero;
+            _invulnerableUntil = Time.unscaledTime + 0.65f;
             _body.linearVelocity = Vector2.zero;
             _body.angularVelocity = 0f;
         }
@@ -213,13 +239,30 @@ namespace ScrapDash
                 }
             }
 
-            if (supports) _groundContacts.Add(collision.collider);
-            else _groundContacts.Remove(collision.collider);
+            if (supports)
+            {
+                _groundContacts.Add(collision.collider);
+                var platform = collision.collider.GetComponent<MovingPlatform>();
+                if (platform != null)
+                {
+                    _supportPlatform = platform;
+                    _supportVelocity = platform.Velocity;
+                }
+            }
+            else
+            {
+                _groundContacts.Remove(collision.collider);
+            }
         }
 
         private void OnCollisionExit2D(Collision2D collision)
         {
             _groundContacts.Remove(collision.collider);
+            if (_supportPlatform != null && collision.collider.gameObject == _supportPlatform.gameObject)
+            {
+                _supportPlatform = null;
+                _supportVelocity = Vector2.zero;
+            }
         }
     }
 }
