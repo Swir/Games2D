@@ -1,0 +1,144 @@
+using UnityEngine;
+
+namespace ScrapDash
+{
+    public sealed class Hazard : MonoBehaviour
+    {
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            var player = other.GetComponent<PlayerController>();
+            if (player != null) ScrapDashGame.Instance?.RespawnPlayer();
+        }
+    }
+
+    public sealed class ScrapCollectible : MonoBehaviour
+    {
+        private bool _collected;
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (_collected || other.GetComponent<PlayerController>() == null) return;
+            _collected = true;
+            ScrapDashGame.Instance?.CollectScrap();
+            Destroy(gameObject);
+        }
+    }
+
+    public sealed class PatrolEnemy : MonoBehaviour
+    {
+        [SerializeField] private float leftX;
+        [SerializeField] private float rightX;
+        [SerializeField] private float speed = 2.6f;
+        private int _direction = 1;
+
+        public void Configure(float left, float right, float moveSpeed)
+        {
+            leftX = Mathf.Min(left, right);
+            rightX = Mathf.Max(left, right);
+            speed = moveSpeed;
+        }
+
+        private void Update()
+        {
+            var position = transform.position;
+            position.x += _direction * speed * Time.deltaTime;
+
+            if (position.x >= rightX)
+            {
+                position.x = rightX;
+                _direction = -1;
+            }
+            else if (position.x <= leftX)
+            {
+                position.x = leftX;
+                _direction = 1;
+            }
+
+            transform.position = position;
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            var player = other.GetComponent<PlayerController>();
+            if (player != null) player.TakeHit(transform.position);
+        }
+    }
+
+    [RequireComponent(typeof(Rigidbody2D))]
+    public sealed class MovingPlatform : MonoBehaviour
+    {
+        [SerializeField] private Vector2 pointA;
+        [SerializeField] private Vector2 pointB;
+        [SerializeField] private float speed = 2f;
+        private Rigidbody2D _body;
+        private float _distance;
+        private float _travel;
+
+        public void Configure(Vector2 a, Vector2 b, float moveSpeed)
+        {
+            pointA = a;
+            pointB = b;
+            speed = moveSpeed;
+            _distance = Vector2.Distance(pointA, pointB);
+        }
+
+        private void Awake()
+        {
+            _body = GetComponent<Rigidbody2D>();
+            _body.bodyType = RigidbodyType2D.Kinematic;
+            _body.useFullKinematicContacts = true;
+            _distance = Vector2.Distance(pointA, pointB);
+        }
+
+        private void FixedUpdate()
+        {
+            if (_distance <= 0.001f) return;
+            _travel += speed * Time.fixedDeltaTime;
+            var loop = Mathf.PingPong(_travel, _distance);
+            var t = loop / _distance;
+            _body.MovePosition(Vector2.Lerp(pointA, pointB, t));
+        }
+    }
+
+    public sealed class MagnetZone : MonoBehaviour
+    {
+        [SerializeField] private Vector2 force = new(0f, 36f);
+
+        public void Configure(Vector2 magnetForce)
+        {
+            force = magnetForce;
+        }
+
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            var player = other.GetComponent<PlayerController>();
+            if (player != null) player.ApplyMagnet(force);
+        }
+    }
+
+    public sealed class Checkpoint : MonoBehaviour
+    {
+        private bool _activated;
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (_activated || other.GetComponent<PlayerController>() == null) return;
+            _activated = true;
+            ScrapDashGame.Instance?.ActivateCheckpoint(transform.position + Vector3.up * 1.4f);
+
+            var renderer = GetComponent<SpriteRenderer>();
+            if (renderer != null) renderer.color = ProceduralVisuals.Hex("#62E5FF");
+        }
+    }
+
+    public sealed class FinishGate : MonoBehaviour
+    {
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (other.GetComponent<PlayerController>() != null)
+            {
+                ScrapDashGame.Instance?.TryFinish();
+            }
+        }
+    }
+}
