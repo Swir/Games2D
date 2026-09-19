@@ -37,6 +37,7 @@ namespace ScrapDash
         private float _invulnerableUntil;
         private Vector2 _supportVelocity;
         private MovingPlatform _supportPlatform;
+        private TrailRenderer _dashTrail;
 
         public bool IsGrounded => _groundContacts.Count > 0;
         public bool IsDashing => _dashRemaining > 0f;
@@ -47,6 +48,7 @@ namespace ScrapDash
             _body = GetComponent<Rigidbody2D>();
             _defaultGravity = _body.gravityScale;
             _visualRoot = transform.Find("Visual");
+            _dashTrail = GetComponent<TrailRenderer>();
 
             _move = new InputAction("Move", InputActionType.Value);
             _move.AddCompositeBinding("1DAxis")
@@ -158,6 +160,7 @@ namespace ScrapDash
                     _body.linearVelocity.x,
                     jumpVelocity + Mathf.Max(0f, _supportVelocity.y)
                 );
+                FeedbackHub.Instance?.PlayJump();
             }
 
             var platformVelocity = IsGrounded ? _supportVelocity : Vector2.zero;
@@ -178,12 +181,19 @@ namespace ScrapDash
             _dashCooldownRemaining = dashCooldown;
             _body.gravityScale = 0f;
             _body.linearVelocity = new Vector2(_facing * dashSpeed, 0f);
+            if (_dashTrail != null)
+            {
+                _dashTrail.Clear();
+                _dashTrail.emitting = true;
+            }
+            FeedbackHub.Instance?.PlayDash(transform.position);
         }
 
         private void EndDash()
         {
             _dashRemaining = 0f;
             _body.gravityScale = _defaultGravity;
+            if (_dashTrail != null) _dashTrail.emitting = false;
         }
 
         public void ApplyMagnet(Vector2 force)
@@ -205,6 +215,7 @@ namespace ScrapDash
             if (direction.sqrMagnitude < 0.1f) direction = Vector2.left;
             _body.linearVelocity = new Vector2(direction.x * 7f, 8f);
             ScrapDashGame.Instance?.NotifyHit();
+            FeedbackHub.Instance?.PlayHit(transform.position);
         }
 
         public void Bounce(float velocity)

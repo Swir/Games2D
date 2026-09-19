@@ -19,6 +19,7 @@ namespace ScrapDash
         {
             if (_collected || other.GetComponent<PlayerController>() == null) return;
             _collected = true;
+            FeedbackHub.Instance?.PlayCollect(transform.position);
             ScrapDashGame.Instance?.CollectScrap();
             Destroy(gameObject);
         }
@@ -71,6 +72,7 @@ namespace ScrapDash
             {
                 _defeated = true;
                 player.Bounce(9.5f);
+                FeedbackHub.Instance?.PlayStomp(transform.position);
                 ScrapDashGame.Instance?.NotifyEnemyDefeated();
                 Destroy(gameObject);
                 return;
@@ -146,6 +148,7 @@ namespace ScrapDash
             if (_activated || other.GetComponent<PlayerController>() == null) return;
             _activated = true;
             ScrapDashGame.Instance?.ActivateCheckpoint(transform.position + Vector3.up * 1.4f);
+            FeedbackHub.Instance?.PlayCheckpoint(transform.position);
 
             var renderer = GetComponent<SpriteRenderer>();
             if (renderer != null) renderer.color = ProceduralVisuals.Hex("#62E5FF");

@@ -6,6 +6,13 @@ namespace ScrapDash
 {
     public sealed class ScrapDashGame : MonoBehaviour
     {
+        private static readonly Vector2Int[] DemoResolutions =
+        {
+            new(1280, 720),
+            new(1600, 900),
+            new(1920, 1080)
+        };
+
         public static ScrapDashGame Instance { get; private set; }
 
         private PlayerController _player;
@@ -17,6 +24,7 @@ namespace ScrapDash
         private bool _won;
         private string _message = string.Empty;
         private float _messageUntil;
+        private int _resolutionIndex = 2;
 
         public int Scrap => _scrap;
         public int Hits => _hits;
@@ -97,6 +105,7 @@ namespace ScrapDash
 
             _won = true;
             _paused = false;
+            FeedbackHub.Instance?.PlayWin(_player != null ? _player.transform.position : Vector3.zero);
             Time.timeScale = 0f;
         }
 
@@ -125,11 +134,55 @@ namespace ScrapDash
 
             if (keyboard?.f11Key.wasPressedThisFrame ?? false)
             {
-                Screen.fullScreenMode = Screen.fullScreen
-                    ? FullScreenMode.Windowed
-                    : FullScreenMode.FullScreenWindow;
-                Screen.fullScreen = !Screen.fullScreen;
+                ToggleFullscreen();
             }
+            else if (gamepad?.leftStickButton.wasPressedThisFrame ?? false)
+            {
+                ToggleFullscreen();
+            }
+
+            if ((keyboard?.f10Key.wasPressedThisFrame ?? false)
+                || (gamepad?.rightStickButton.wasPressedThisFrame ?? false))
+            {
+                CycleResolution();
+            }
+
+            if ((keyboard?.leftBracketKey.wasPressedThisFrame ?? false)
+                || (gamepad?.leftShoulder.wasPressedThisFrame ?? false))
+            {
+                ChangeVolume(-0.1f);
+            }
+
+            if ((keyboard?.rightBracketKey.wasPressedThisFrame ?? false)
+                || (gamepad?.rightShoulder.wasPressedThisFrame ?? false))
+            {
+                ChangeVolume(0.1f);
+            }
+        }
+
+        private void ToggleFullscreen()
+        {
+            var targetMode = Screen.fullScreenMode == FullScreenMode.Windowed
+                ? FullScreenMode.FullScreenWindow
+                : FullScreenMode.Windowed;
+            Screen.SetResolution(Screen.width, Screen.height, targetMode);
+            ShowMessage(targetMode == FullScreenMode.Windowed ? "WINDOWED MODE" : "FULLSCREEN MODE");
+        }
+
+        private void CycleResolution()
+        {
+            _resolutionIndex = (_resolutionIndex + 1) % DemoResolutions.Length;
+            var resolution = DemoResolutions[_resolutionIndex];
+            Screen.SetResolution(resolution.x, resolution.y, Screen.fullScreenMode);
+            ShowMessage($"RESOLUTION {resolution.x}x{resolution.y}");
+        }
+
+        private void ChangeVolume(float delta)
+        {
+            var feedback = FeedbackHub.Instance;
+            if (feedback == null) return;
+            feedback.SetMasterVolume(feedback.MasterVolume + delta);
+            ShowMessage($"VOLUME {Mathf.RoundToInt(feedback.MasterVolume * 100f)}%");
         }
 
         private void TogglePause()
@@ -180,11 +233,10 @@ namespace ScrapDash
                 fontSize = Mathf.Clamp(height / 58, 13, 19),
                 normal = { textColor = new Color(0.75f, 0.82f, 0.88f) }
             };
-            GUI.Label(
-                new Rect(18, height - 58, width - 36, 40),
-                "Move A/D or ←/→  •  Jump Space/A  •  Dash Shift/X or pad B  •  Pause Esc/Start  •  Restart R/Back  •  F11 Fullscreen",
-                helpStyle
-            );
+            GUI.Label(new Rect(18, height - 70, width - 36, 24),
+                "Move A/D or ←/→  •  Jump Space / pad A  •  Dash Shift/X / pad B  •  Stomp enemies from above", helpStyle);
+            GUI.Label(new Rect(18, height - 43, width - 36, 24),
+                "Pause Esc/Start  •  Restart R/Back  •  F11/L3 Fullscreen  •  F10/R3 Resolution  •  [ ]/LB RB Volume", helpStyle);
 
             if (_paused) DrawCenterPanel("PAUSED", "Esc / Start to resume");
             if (_won) DrawCenterPanel("LEVEL 1 COMPLETE!", $"Recovered {_scrap}/{LevelDefinition.TotalScrap} scrap • R / Back to replay");

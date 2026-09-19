@@ -16,11 +16,13 @@ namespace ScrapDash.Tests
             Assert.That(root, Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<PlayerController>(), Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<ScrapDashGame>(), Is.Not.Null);
+            Assert.That(Object.FindFirstObjectByType<FeedbackHub>(), Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<MovingPlatform>(), Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<MagnetZone>(), Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<PatrolEnemy>(), Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<Checkpoint>(), Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<FinishGate>(), Is.Not.Null);
+            Assert.That(Object.FindFirstObjectByType<TrailRenderer>(), Is.Not.Null);
             Assert.That(
                 Object.FindObjectsByType<ScrapCollectible>(FindObjectsSortMode.None).Length,
                 Is.EqualTo(LevelDefinition.TotalScrap)

@@ -28,6 +28,7 @@ namespace ScrapDash
             var root = new GameObject("SCRAP_DASH_LEVEL");
             var gameObject = new GameObject("GameState");
             gameObject.transform.SetParent(root.transform);
+            gameObject.AddComponent<FeedbackHub>();
             var game = gameObject.AddComponent<ScrapDashGame>();
 
             CreateBackdrop(root.transform);
@@ -83,13 +84,25 @@ namespace ScrapDash
             ProceduralVisuals.Rect("Head", new Vector2(0f, 0.48f), new Vector2(0.72f, 0.5f), Cyan, visual.transform, 21);
             ProceduralVisuals.Rect("EyeLeft", new Vector2(-0.18f, 0.52f), new Vector2(0.1f, 0.1f), Background, visual.transform, 22);
             ProceduralVisuals.Rect("EyeRight", new Vector2(0.18f, 0.52f), new Vector2(0.1f, 0.1f), Background, visual.transform, 22);
-            ProceduralVisuals.Rect("Core", new Vector2(0f, -0.08f), new Vector2(0.28f, 0.28f), Yellow, visual.transform, 22);
+            var core = ProceduralVisuals.Rect("Core", new Vector2(0f, -0.08f), new Vector2(0.28f, 0.28f), Yellow, visual.transform, 22);
+            core.AddComponent<CorePulse>();
             ProceduralVisuals.Rect("Antenna", new Vector2(0.18f, 0.86f), new Vector2(0.08f, 0.34f), Yellow, visual.transform, 20);
             ProceduralVisuals.Rect("AntennaTip", new Vector2(0.18f, 1.04f), new Vector2(0.18f, 0.18f), Danger, visual.transform, 22);
             ProceduralVisuals.Rect("ArmLeft", new Vector2(-0.52f, -0.03f), new Vector2(0.2f, 0.48f), Blue, visual.transform, 19);
             ProceduralVisuals.Rect("ArmRight", new Vector2(0.52f, -0.03f), new Vector2(0.2f, 0.48f), Blue, visual.transform, 19);
             ProceduralVisuals.Rect("FootLeft", new Vector2(-0.25f, -0.55f), new Vector2(0.25f, 0.18f), Blue, visual.transform, 21);
             ProceduralVisuals.Rect("FootRight", new Vector2(0.25f, -0.55f), new Vector2(0.25f, 0.18f), Blue, visual.transform, 21);
+
+            var trail = player.AddComponent<TrailRenderer>();
+            trail.time = 0.16f;
+            trail.startWidth = 0.58f;
+            trail.endWidth = 0f;
+            trail.startColor = new Color(Cyan.r, Cyan.g, Cyan.b, 0.72f);
+            trail.endColor = new Color(Blue.r, Blue.g, Blue.b, 0f);
+            trail.sortingOrder = 18;
+            trail.emitting = false;
+            var trailShader = Shader.Find("Sprites/Default");
+            if (trailShader != null) trail.material = new Material(trailShader);
 
             return player.AddComponent<PlayerController>();
         }

@@ -18,8 +18,9 @@ The first playable level is **Closing Time Circuit**. The source currently targe
 - five collectible scrap pieces;
 - a Magnet Lift section;
 - moving-platform velocity carry for reliable keyboard and gamepad traversal;
+- original procedural sound effects, collectible/stomp/checkpoint sparks and a cyan dash trail;
 - finish gate with a minimum scrap objective;
-- HUD, pause, restart and fullscreen toggle.
+- HUD, pause, restart, fullscreen/windowed toggle, resolution presets and persistent master volume.
 
 ## Controls
 
@@ -30,7 +31,9 @@ The first playable level is **Closing Time Circuit**. The source currently targe
 | Dash | Left Shift/X | East button / B |
 | Pause | Esc | Start |
 | Restart | R | Back/View |
-| Fullscreen | F11 | — |
+| Fullscreen | F11 | Left stick click |
+| Resolution | F10 | Right stick click |
+| Volume | [ / ] | LB / RB |
 
 ## Open in Unity
 
