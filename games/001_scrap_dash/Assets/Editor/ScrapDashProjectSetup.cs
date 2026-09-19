@@ -7,6 +7,8 @@ namespace ScrapDash.Editor
     [InitializeOnLoad]
     public static class ScrapDashProjectSetup
     {
+        private const string IconPath = "Assets/Art/scrap-dash-icon.png";
+
         static ScrapDashProjectSetup()
         {
             EditorApplication.delayCall += Apply;
@@ -22,6 +24,7 @@ namespace ScrapDash.Editor
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
             PlayerSettings.resizableWindow = true;
             PlayerSettings.runInBackground = false;
+            ApplyGameIcon();
 
             var settingsAssets = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset");
             if (settingsAssets.Length == 0) return;
@@ -35,6 +38,19 @@ namespace ScrapDash.Editor
                 AssetDatabase.SaveAssets();
                 Debug.Log("SCRAP DASH: enabled the new Unity Input System backend.");
             }
+        }
+
+        private static void ApplyGameIcon()
+        {
+            var icon = AssetDatabase.LoadAssetAtPath<Texture2D>(IconPath);
+            if (icon == null) return;
+
+            var sizes = PlayerSettings.GetIconSizesForTargetGroup(BuildTargetGroup.Standalone);
+            if (sizes.Length == 0) return;
+
+            var icons = new Texture2D[sizes.Length];
+            for (var i = 0; i < icons.Length; i++) icons[i] = icon;
+            PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Standalone, icons);
         }
     }
 }

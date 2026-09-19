@@ -2,6 +2,12 @@
 
 # SCRAP DASH
 
+<div align="center">
+
+<img src="Assets/Art/scrap-dash-icon.png" width="220" alt="SCRAP DASH original salvage robot game icon">
+
+</div>
+
 **SCRAP DASH** is an original fast 2D/2.5D Unity platformer about a tiny salvage robot escaping a broken amusement park after closing time.
 
 The first playable level is **Closing Time Circuit**. The source currently targets Unity 6.3 LTS and uses the Unity Input System for keyboard and gamepad controls.
@@ -55,7 +61,7 @@ See [ROADMAP.md](ROADMAP.md). The roadmap counts verified gameplay/runtime deliv
 
 ## Legal
 
-SCRAP DASH is an original project. It does not contain Tiny Toon, ROM-derived content, Warner Bros. assets, or other ripped commercial game materials.
+SCRAP DASH is an original project. Its robot icon, procedural programmer art, generated sound effects, code, names and world were created specifically for this game. It does not contain Tiny Toon, ROM-derived content, Warner Bros. assets, or other ripped commercial game materials.
 
 ## 🔎 Search Keywords
 
