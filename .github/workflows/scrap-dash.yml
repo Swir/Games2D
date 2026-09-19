@@ -1,0 +1,107 @@
+name: SCRAP DASH Unity CI
+
+on:
+  pull_request:
+    paths:
+      - 'games/001_scrap_dash/**'
+      - '.github/workflows/scrap-dash.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'games/001_scrap_dash/**'
+      - '.github/workflows/scrap-dash.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+
+env:
+  PROJECT_PATH: games/001_scrap_dash
+  UNITY_VERSION: 6000.3.13f1
+
+jobs:
+  tests:
+    name: Unity EditMode + PlayMode
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: games/001_scrap_dash/Library
+          key: scrap-dash-library-tests-${{ hashFiles('games/001_scrap_dash/Assets/**', 'games/001_scrap_dash/Packages/**', 'games/001_scrap_dash/ProjectSettings/**') }}
+          restore-keys: |
+            scrap-dash-library-tests-
+
+      - name: Run Unity tests
+        id: unityTests
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          projectPath: ${{ env.PROJECT_PATH }}
+          unityVersion: ${{ env.UNITY_VERSION }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          checkName: SCRAP DASH Unity Tests
+
+      - name: Upload Unity test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SCRAP-DASH-Test-Results
+          path: ${{ steps.unityTests.outputs.artifactsPath }}
+          if-no-files-found: ignore
+
+  windows-demo:
+    name: Windows x64 Demo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: games/001_scrap_dash/Library
+          key: scrap-dash-library-windows-${{ hashFiles('games/001_scrap_dash/Assets/**', 'games/001_scrap_dash/Packages/**', 'games/001_scrap_dash/ProjectSettings/**') }}
+          restore-keys: |
+            scrap-dash-library-windows-
+
+      - name: Build Windows x64
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          projectPath: ${{ env.PROJECT_PATH }}
+          unityVersion: ${{ env.UNITY_VERSION }}
+          targetPlatform: StandaloneWindows64
+          buildName: ScrapDashDemo
+          buildsPath: build
+          allowDirtyBuild: true
+          versioning: Semantic
+
+      - name: Verify EXE and write SHA-256
+        shell: bash
+        run: |
+          set -euo pipefail
+          exe="$(find build -type f -iname '*.exe' -print -quit)"
+          if [ -z "$exe" ]; then
+            echo "No Windows .exe was produced."
+            exit 1
+          fi
+          echo "Windows demo executable: $exe"
+          sha256sum "$exe" | tee build/SHA256SUMS.txt
+
+      - name: Upload Windows demo
+        uses: actions/upload-artifact@v4
+        with:
+          name: SCRAP-DASH-Level1-Windows
+          path: build
+          if-no-files-found: error
