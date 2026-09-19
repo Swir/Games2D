@@ -165,6 +165,13 @@ namespace ScrapDash
             ProceduralVisuals.Rect("EnemyWheelLeft", new Vector2(-0.3f, -0.55f), new Vector2(0.24f, 0.24f), Surface, enemy.transform, 13);
             ProceduralVisuals.Rect("EnemyWheelRight", new Vector2(0.3f, -0.55f), new Vector2(0.24f, 0.24f), Surface, enemy.transform, 13);
 
+            var spring = ProceduralVisuals.Rect("ScrapSpring", new Vector2(15.55f, -1.84f), new Vector2(0.9f, 0.22f), Yellow, parent, 14);
+            var springCollider = spring.AddComponent<BoxCollider2D>();
+            springCollider.isTrigger = true;
+            springCollider.size = new Vector2(1f, 1.9f);
+            spring.AddComponent<SpringPad>().Configure(17.5f);
+            ProceduralVisuals.Rect("SpringCoil", new Vector2(0f, -0.18f), new Vector2(0.42f, 0.32f), Cyan, spring.transform, 13);
+
             var magnet = ProceduralVisuals.Rect("MagnetLiftZone", new Vector2(17.1f, 0f), new Vector2(2.1f, 5.2f), new Color(0.0f, 0.55f, 1f, 0.16f), parent, 5);
             var magnetCollider = magnet.AddComponent<BoxCollider2D>();
             magnetCollider.isTrigger = true;

@@ -22,10 +22,11 @@ The first playable level is **Closing Time Circuit**. The source currently targe
 - a patrol enemy;
 - stomp attack that recycles the patrol enemy and bounces the player;
 - five collectible scrap pieces;
-- a Magnet Lift section;
+- a salvage spring launch into the Magnet Lift section;
 - moving-platform velocity carry for reliable keyboard and gamepad traversal;
 - original procedural sound effects, collectible/stomp/checkpoint sparks and a cyan dash trail;
 - finish gate with a minimum scrap objective;
+- run timer, death counter, persistent best time and end-of-level grade;
 - HUD, pause, restart, fullscreen/windowed toggle, resolution presets and persistent master volume.
 
 ## Controls

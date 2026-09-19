@@ -19,6 +19,7 @@ namespace ScrapDash.Tests
             Assert.That(Object.FindFirstObjectByType<FeedbackHub>(), Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<MovingPlatform>(), Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<MagnetZone>(), Is.Not.Null);
+            Assert.That(Object.FindFirstObjectByType<SpringPad>(), Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<PatrolEnemy>(), Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<Checkpoint>(), Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<FinishGate>(), Is.Not.Null);
@@ -84,6 +85,7 @@ namespace ScrapDash.Tests
 
             Assert.That((Vector2)player.transform.position, Is.EqualTo(checkpoint));
             Assert.That(player.Body.linearVelocity, Is.EqualTo(Vector2.zero));
+            Assert.That(game.Deaths, Is.EqualTo(1));
 
             Object.Destroy(root);
             yield return null;

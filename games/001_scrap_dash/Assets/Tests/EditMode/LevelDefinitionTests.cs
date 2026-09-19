@@ -16,7 +16,15 @@ namespace ScrapDash.Tests
             Assert.That(LevelDefinition.EnemyCount, Is.GreaterThan(0));
             Assert.That(LevelDefinition.MovingPlatformCount, Is.GreaterThan(0));
             Assert.That(LevelDefinition.MagnetZoneCount, Is.GreaterThan(0));
+            Assert.That(LevelDefinition.SpringPadCount, Is.GreaterThan(0));
             Assert.That(LevelDefinition.CheckpointCount, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void RunTimerUsesStableMinuteSecondFormatting()
+        {
+            Assert.That(ScrapDashGame.FormatTime(65.349f), Is.EqualTo("01:05.34"));
+            Assert.That(ScrapDashGame.FormatTime(-1f), Is.EqualTo("00:00.00"));
         }
 
         [Test]

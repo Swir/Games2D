@@ -139,6 +139,38 @@ namespace ScrapDash
         }
     }
 
+    public sealed class SpringPad : MonoBehaviour
+    {
+        [SerializeField] private float bounceVelocity = 17f;
+        private float _readyAt;
+
+        public void Configure(float velocity)
+        {
+            bounceVelocity = Mathf.Max(1f, velocity);
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            Bounce(other);
+        }
+
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            Bounce(other);
+        }
+
+        private void Bounce(Collider2D other)
+        {
+            if (Time.time < _readyAt) return;
+            var player = other.GetComponent<PlayerController>();
+            if (player == null || player.Body.linearVelocity.y > 2f) return;
+
+            _readyAt = Time.time + 0.18f;
+            player.Bounce(bounceVelocity);
+            FeedbackHub.Instance?.PlaySpring(transform.position);
+        }
+    }
+
     public sealed class Checkpoint : MonoBehaviour
     {
         private bool _activated;
