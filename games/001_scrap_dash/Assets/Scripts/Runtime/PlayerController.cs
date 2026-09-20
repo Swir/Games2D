@@ -38,9 +38,11 @@ namespace ScrapDash
         private Vector2 _supportVelocity;
         private MovingPlatform _supportPlatform;
         private TrailRenderer _dashTrail;
+        private bool _airDashReady = true;
 
         public bool IsGrounded => _groundContacts.Count > 0;
         public bool IsDashing => _dashRemaining > 0f;
+        public bool AirDashReady => IsGrounded || _airDashReady;
         public Rigidbody2D Body => _body;
 
         private void Awake()
@@ -121,12 +123,22 @@ namespace ScrapDash
             if (_jump.WasPressedThisFrame()) _jumpBufferRemaining = jumpBufferTime;
             else _jumpBufferRemaining = Mathf.Max(0f, _jumpBufferRemaining - Time.deltaTime);
 
-            if (IsGrounded) _coyoteRemaining = coyoteTime;
-            else _coyoteRemaining = Mathf.Max(0f, _coyoteRemaining - Time.deltaTime);
+            if (IsGrounded)
+            {
+                _coyoteRemaining = coyoteTime;
+                _airDashReady = true;
+            }
+            else
+            {
+                _coyoteRemaining = Mathf.Max(0f, _coyoteRemaining - Time.deltaTime);
+            }
 
             _dashCooldownRemaining = Mathf.Max(0f, _dashCooldownRemaining - Time.deltaTime);
 
-            if (_dash.WasPressedThisFrame() && _dashCooldownRemaining <= 0f && !IsDashing)
+            if (_dash.WasPressedThisFrame()
+                && _dashCooldownRemaining <= 0f
+                && !IsDashing
+                && (IsGrounded || _airDashReady))
             {
                 StartDash();
             }
@@ -177,6 +189,7 @@ namespace ScrapDash
 
         private void StartDash()
         {
+            if (!IsGrounded) _airDashReady = false;
             _dashRemaining = dashDuration;
             _dashCooldownRemaining = dashCooldown;
             _body.gravityScale = 0f;
@@ -221,6 +234,7 @@ namespace ScrapDash
         public void Bounce(float velocity)
         {
             EndDash();
+            _airDashReady = true;
             _groundContacts.Clear();
             _supportPlatform = null;
             _supportVelocity = Vector2.zero;
@@ -230,6 +244,7 @@ namespace ScrapDash
         public void ResetMotion()
         {
             EndDash();
+            _airDashReady = true;
             _groundContacts.Clear();
             _supportPlatform = null;
             _supportVelocity = Vector2.zero;
