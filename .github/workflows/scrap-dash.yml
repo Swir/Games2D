@@ -32,7 +32,6 @@ jobs:
         run: |
           set -euo pipefail
           python3 games/001_scrap_dash/tools/generate_progress.py --check
-          python3 games/001_scrap_dash/tools/prepare_unity_license.py --self-test
           python3 - <<'PY'
           import json
           import xml.etree.ElementTree as ET
@@ -63,16 +62,11 @@ jobs:
           restore-keys: |
             scrap-dash-library-tests-
 
-      - name: Normalize Unity Personal license
-        env:
-          RAW_UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-        run: python3 games/001_scrap_dash/tools/prepare_unity_license.py
-
       - name: Run Unity tests
         id: unityTests
         uses: game-ci/unity-test-runner@v4.3.1
         env:
-          UNITY_LICENSE: ${{ env.UNITY_LICENSE_NORMALIZED }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
