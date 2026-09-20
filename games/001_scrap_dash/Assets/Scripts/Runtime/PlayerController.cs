@@ -150,7 +150,8 @@ namespace ScrapDash
 
             if (transform.position.y < -7f)
             {
-                ScrapDashGame.Instance?.RespawnPlayer();
+                FeedbackHub.Instance?.PlayDeath(transform.position);
+                ScrapDashGame.Instance?.RespawnPlayer("FALL RECOVERY");
             }
         }
 

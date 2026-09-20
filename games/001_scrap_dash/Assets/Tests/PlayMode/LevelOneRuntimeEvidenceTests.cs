@@ -127,6 +127,7 @@ namespace ScrapDash.Tests
             }
 
             Assert.That(visibleHazard, Is.Not.Null);
+            var feedbackBeforeHazard = Object.FindObjectsByType<FeedbackSpark>(FindObjectsSortMode.None).Length;
             player.transform.position = visibleHazard.transform.position;
             player.Body.linearVelocity = Vector2.zero;
             Physics2D.SyncTransforms();
@@ -134,7 +135,34 @@ namespace ScrapDash.Tests
 
             Assert.That(game.Deaths, Is.EqualTo(1));
             Assert.That((Vector2)player.transform.position, Is.EqualTo(activatedPoint));
+            Assert.That(visibleHazard.TriggerCount, Is.EqualTo(1));
+            Assert.That(game.RespawnFlashActive, Is.True, "Fatal contact must provide visible reboot feedback.");
+            Assert.That(
+                Object.FindObjectsByType<FeedbackSpark>(FindObjectsSortMode.None).Length,
+                Is.GreaterThan(feedbackBeforeHazard),
+                "Fatal contact must emit its own danger burst."
+            );
 
+        }
+
+        [UnityTest]
+        public IEnumerator FallingOutOfTheArenaUsesTheSafeCheckpointRecovery()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            var game = Object.FindFirstObjectByType<ScrapDashGame>();
+            yield return null;
+
+            var safePoint = new Vector2(14.8f, 0.25f);
+            game.ActivateCheckpoint(safePoint);
+            player.transform.position = new Vector2(8f, -8f);
+            player.Body.linearVelocity = new Vector2(4f, -15f);
+            yield return null;
+
+            Assert.That(game.Deaths, Is.EqualTo(1));
+            Assert.That((Vector2)player.transform.position, Is.EqualTo(safePoint));
+            Assert.That(player.Body.linearVelocity, Is.EqualTo(Vector2.zero));
+            Assert.That(game.RespawnFlashActive, Is.True);
         }
 
         [UnityTest]

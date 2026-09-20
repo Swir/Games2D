@@ -4,10 +4,35 @@ namespace ScrapDash
 {
     public sealed class Hazard : MonoBehaviour
     {
+        private SpriteRenderer _renderer;
+        private Color _baseColor;
+
+        public int TriggerCount { get; private set; }
+
+        private void Awake()
+        {
+            _renderer = GetComponent<SpriteRenderer>();
+            if (_renderer != null) _baseColor = _renderer.color;
+        }
+
+        private void Update()
+        {
+            if (_renderer == null || _baseColor.a <= 0f) return;
+
+            var warning = 0.5f + Mathf.Sin(Time.unscaledTime * 11f) * 0.5f;
+            var color = Color.Lerp(_baseColor, Color.white, warning * 0.22f);
+            color.a = _baseColor.a;
+            _renderer.color = color;
+        }
+
         private void OnTriggerEnter2D(Collider2D other)
         {
             var player = other.GetComponent<PlayerController>();
-            if (player != null) ScrapDashGame.Instance?.RespawnPlayer();
+            if (player == null) return;
+
+            TriggerCount++;
+            FeedbackHub.Instance?.PlayDeath(player.transform.position);
+            ScrapDashGame.Instance?.RespawnPlayer("SURGE REBOOT");
         }
     }
 

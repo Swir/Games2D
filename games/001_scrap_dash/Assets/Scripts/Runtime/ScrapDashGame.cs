@@ -31,6 +31,7 @@ namespace ScrapDash
         private bool _won;
         private string _message = string.Empty;
         private float _messageUntil;
+        private float _respawnFlashUntil;
         private int _resolutionIndex = 2;
 
         public int Scrap => _scrap;
@@ -45,6 +46,7 @@ namespace ScrapDash
         public bool BlocksPlayerControl => _paused || _won;
         public Vector2 Checkpoint => _checkpoint;
         public int EnemiesDefeated => _enemiesDefeated;
+        public bool RespawnFlashActive => Time.unscaledTime < _respawnFlashUntil;
 
         private void Awake()
         {
@@ -90,7 +92,8 @@ namespace ScrapDash
             _integrity = Mathf.Max(0, _integrity - 1);
             if (_integrity <= 0)
             {
-                RespawnPlayer();
+                FeedbackHub.Instance?.PlayDeath(_player != null ? _player.transform.position : Vector3.zero);
+                RespawnPlayer("CORE FAILURE — REBOOT");
                 return;
             }
 
@@ -109,7 +112,7 @@ namespace ScrapDash
             ShowMessage("CHECKPOINT ONLINE");
         }
 
-        public void RespawnPlayer()
+        public void RespawnPlayer(string message = "REBOOTED")
         {
             if (_player == null || _won) return;
             _deaths++;
@@ -117,7 +120,8 @@ namespace ScrapDash
             _player.transform.position = _checkpoint;
             _player.ResetMotion();
             FindFirstObjectByType<FollowCamera>()?.SnapToTarget();
-            ShowMessage("REBOOTED");
+            _respawnFlashUntil = Time.unscaledTime + 0.22f;
+            ShowMessage(message);
         }
 
         public void TryFinish()
@@ -252,6 +256,14 @@ namespace ScrapDash
         {
             var width = Screen.width;
             var height = Screen.height;
+
+            if (RespawnFlashActive)
+            {
+                var previousColor = GUI.color;
+                GUI.color = new Color(1f, 0.08f, 0.22f, 0.2f);
+                GUI.DrawTexture(new Rect(0f, 0f, width, height), Texture2D.whiteTexture);
+                GUI.color = previousColor;
+            }
 
             var hudStyle = new GUIStyle(GUI.skin.label)
             {

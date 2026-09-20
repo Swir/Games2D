@@ -18,6 +18,7 @@ namespace ScrapDash
         private AudioClip _checkpoint;
         private AudioClip _stomp;
         private AudioClip _spring;
+        private AudioClip _death;
         private AudioClip _win;
 
         public float MasterVolume => AudioListener.volume;
@@ -36,6 +37,7 @@ namespace ScrapDash
             _checkpoint = CreateTone("Checkpoint", 420f, 920f, 0.28f, 0.2f);
             _stomp = CreateTone("Stomp", 260f, 110f, 0.12f, 0.23f, true);
             _spring = CreateTone("Spring", 230f, 980f, 0.18f, 0.21f);
+            _death = CreateTone("Death", 210f, 45f, 0.32f, 0.28f, true);
             _win = CreateTone("Win", 440f, 1040f, 0.55f, 0.22f);
 
             SetMasterVolume(PlayerPrefs.GetFloat(VolumeKey, 0.8f), false);
@@ -90,6 +92,12 @@ namespace ScrapDash
         {
             Play(_spring);
             Burst(position, ProceduralVisuals.Hex("#FFE066"), 10, 4.7f);
+        }
+
+        public void PlayDeath(Vector3 position)
+        {
+            Play(_death);
+            Burst(position, ProceduralVisuals.Hex("#FF426D"), 16, 6.2f);
         }
 
         public void PlayWin(Vector3 position)
