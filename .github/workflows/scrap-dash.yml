@@ -97,15 +97,10 @@ jobs:
           restore-keys: |
             scrap-dash-library-windows-
 
-      - name: Normalize Unity Personal license
-        env:
-          RAW_UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-        run: python3 games/001_scrap_dash/tools/prepare_unity_license.py
-
       - name: Build Windows x64
         uses: game-ci/unity-builder@v4.8.1
         env:
-          UNITY_LICENSE: ${{ env.UNITY_LICENSE_NORMALIZED }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
