@@ -37,6 +37,7 @@ namespace ScrapDash
             CreateCamera(root.transform, player.transform);
             CreateLevelGeometry(root.transform);
             CreateGameplay(root.transform);
+            CreateWayfinding(root.transform);
             return root;
         }
 
@@ -189,6 +190,32 @@ namespace ScrapDash
             finishCollider.isTrigger = true;
             finish.AddComponent<FinishGate>();
             ProceduralVisuals.Rect("FinishTop", new Vector2(-0.65f, 1f), new Vector2(1.7f, 0.25f), Cyan, finish.transform, 11);
+        }
+
+        private static void CreateWayfinding(Transform parent)
+        {
+            CreateRouteChevrons(parent, "DashRoute", new Vector2(-4.1f, -0.65f), Vector2.right, Cyan);
+            CreateRouteChevrons(parent, "CartRoute", new Vector2(3.4f, 0.35f), Vector2.right, Yellow);
+            CreateRouteChevrons(parent, "MagnetRoute", new Vector2(15.55f, -0.75f), Vector2.up, Cyan);
+            CreateRouteChevrons(parent, "FinishRoute", new Vector2(23.35f, -0.4f), Vector2.right, Yellow);
+        }
+
+        private static void CreateRouteChevrons(Transform parent, string name, Vector2 position, Vector2 direction, Color color)
+        {
+            var route = new GameObject(name);
+            route.transform.SetParent(parent, false);
+            route.transform.position = position;
+            route.transform.rotation = Quaternion.Euler(0f, 0f, direction == Vector2.up ? 90f : 0f);
+            route.AddComponent<CorePulse>();
+
+            for (var i = 0; i < 3; i++)
+            {
+                var x = (i - 1) * 0.42f;
+                var upper = ProceduralVisuals.Rect($"Chevron_{i}_Upper", new Vector2(x, 0.12f), new Vector2(0.1f, 0.42f), color, route.transform, 16);
+                var lower = ProceduralVisuals.Rect($"Chevron_{i}_Lower", new Vector2(x, -0.12f), new Vector2(0.1f, 0.42f), color, route.transform, 16);
+                upper.transform.localRotation = Quaternion.Euler(0f, 0f, -42f);
+                lower.transform.localRotation = Quaternion.Euler(0f, 0f, 42f);
+            }
         }
 
         private static GameObject CreatePlatform(Transform parent, string name, Vector2 position, Vector2 size, bool kinematic = false)

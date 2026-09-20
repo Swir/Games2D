@@ -159,6 +159,48 @@ namespace ScrapDash.Tests
 
         }
 
+        [UnityTest]
+        public IEnumerator FollowCameraKeepsTheCriticalRouteReadableAndSnapsAfterRespawn()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            var follow = Object.FindFirstObjectByType<FollowCamera>();
+            var camera = follow.GetComponent<Camera>();
+            yield return null;
+
+            var cameraStartX = follow.transform.position.x;
+            player.transform.position = new Vector2(8f, -1.1f);
+            player.Body.linearVelocity = Vector2.right * 8f;
+            for (var i = 0; i < 4; i++) yield return null;
+            Assert.That(follow.transform.position.x, Is.GreaterThan(cameraStartX + 0.1f), "Camera must smoothly follow forward motion.");
+            Assert.That(follow.transform.position.x, Is.LessThan(player.transform.position.x + 3f), "Camera smoothing must not overshoot the player.");
+
+            var routePoints = new[]
+            {
+                new Vector2(-10f, -1.1f),
+                new Vector2(18.2f, 3.35f),
+                new Vector2(25.5f, -1.1f)
+            };
+
+            foreach (var point in routePoints)
+            {
+                player.transform.position = point;
+                player.Body.linearVelocity = Vector2.zero;
+                follow.SnapToTarget();
+                var viewport = camera.WorldToViewportPoint(player.transform.position);
+                Assert.That(viewport.x, Is.InRange(0.15f, 0.85f), $"Route point {point} must remain horizontally readable.");
+                Assert.That(viewport.y, Is.InRange(0.15f, 0.85f), $"Route point {point} must remain vertically readable.");
+            }
+
+            var checkpoint = new Vector2(14.8f, 0.25f);
+            ScrapDashGame.Instance.ActivateCheckpoint(checkpoint);
+            player.transform.position = new Vector2(-20f, -8f);
+            ScrapDashGame.Instance.RespawnPlayer();
+
+            Assert.That((Vector2)player.transform.position, Is.EqualTo(checkpoint));
+            Assert.That(Vector2.Distance(follow.transform.position, checkpoint), Is.LessThan(4f));
+        }
+
         private static IEnumerator WaitForGrounding(PlayerController player)
         {
             for (var i = 0; i < 20 && !player.IsGrounded; i++)

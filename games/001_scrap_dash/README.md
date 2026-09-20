@@ -30,6 +30,8 @@ The first playable level is **Closing Time Circuit**. The source currently targe
 - five collectible scrap pieces;
 - a salvage spring launch into the Magnet Lift section;
 - moving-platform velocity carry for reliable keyboard and gamepad traversal;
+- velocity-aware camera look-ahead, bounded framing and instant respawn recentering;
+- pulsing cyan/yellow route chevrons for gaps, the cart, Magnet Lift and finish;
 - original procedural sound effects, collectible/stomp/checkpoint sparks and a cyan dash trail;
 - finish gate with a minimum scrap objective;
 - run timer, death counter, persistent best time and end-of-level grade;

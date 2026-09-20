@@ -116,6 +116,7 @@ namespace ScrapDash
             _integrity = MaxIntegrity;
             _player.transform.position = _checkpoint;
             _player.ResetMotion();
+            FindFirstObjectByType<FollowCamera>()?.SnapToTarget();
             ShowMessage("REBOOTED");
         }
 
