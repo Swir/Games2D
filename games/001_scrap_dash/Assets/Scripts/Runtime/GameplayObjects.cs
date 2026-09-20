@@ -66,6 +66,15 @@ namespace ScrapDash
             var player = other.GetComponent<PlayerController>();
             if (player == null || _defeated) return;
 
+            if (player.IsDashing)
+            {
+                _defeated = true;
+                FeedbackHub.Instance?.PlayStomp(transform.position);
+                ScrapDashGame.Instance?.NotifyEnemyDefeated();
+                Destroy(gameObject);
+                return;
+            }
+
             var isStomp = player.Body.linearVelocity.y < -0.5f
                 && player.transform.position.y > transform.position.y + 0.2f;
             if (isStomp)
