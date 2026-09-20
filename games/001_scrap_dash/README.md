@@ -58,7 +58,7 @@ Open this directory as its own Unity project:
 games/001_scrap_dash/
 ```
 
-Pinned editor line: **Unity 6000.3.13f1 (Unity 6.3 LTS)**.
+Pinned editor line: **Unity 6000.3.13f1 (Unity 6.3 LTS)**. The repository also commits deterministic Unity 6.3 player settings for the new Input System, a resizable 1920x1080 Windows window and borderless fullscreen switching.
 
 ## Demo status
 

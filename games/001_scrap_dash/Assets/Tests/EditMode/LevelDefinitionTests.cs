@@ -35,5 +35,23 @@ namespace ScrapDash.Tests
             Assert.That(icon.width, Is.GreaterThanOrEqualTo(256));
             Assert.That(icon.height, Is.EqualTo(icon.width));
         }
+
+        [Test]
+        public void WindowsDemoUsesTheNewInputSystemAndPlayableDisplayDefaults()
+        {
+            Assert.That(PlayerSettings.companyName, Is.EqualTo("SWIR"));
+            Assert.That(PlayerSettings.productName, Is.EqualTo("SCRAP DASH"));
+            Assert.That(PlayerSettings.defaultScreenWidth, Is.EqualTo(1920));
+            Assert.That(PlayerSettings.defaultScreenHeight, Is.EqualTo(1080));
+            Assert.That(PlayerSettings.fullScreenMode, Is.EqualTo(FullScreenMode.FullScreenWindow));
+            Assert.That(PlayerSettings.resizableWindow, Is.True);
+
+            var assets = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset");
+            Assert.That(assets, Is.Not.Empty, "The project must commit deterministic player settings.");
+            var serialized = new SerializedObject(assets[0]);
+            var activeInputHandler = serialized.FindProperty("activeInputHandler");
+            Assert.That(activeInputHandler, Is.Not.Null);
+            Assert.That(activeInputHandler.intValue, Is.EqualTo(1), "Keyboard and gamepad require the new Input System backend.");
+        }
     }
 }

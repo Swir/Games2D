@@ -40,6 +40,14 @@ jobs:
           root = Path("games/001_scrap_dash")
           version = (root / "ProjectSettings/ProjectVersion.txt").read_text(encoding="utf-8")
           assert "6000.3.13f1" in version
+          player_settings = (root / "ProjectSettings/ProjectSettings.asset").read_text(encoding="utf-8")
+          assert "serializedVersion: 28" in player_settings
+          assert "productName: SCRAP DASH" in player_settings
+          assert "defaultScreenWidth: 1920" in player_settings
+          assert "defaultScreenHeight: 1080" in player_settings
+          assert "resizableWindow: 1" in player_settings
+          assert "activeInputHandler: 1" in player_settings
+          assert "scriptingBackend:\n    Standalone: 0" in player_settings
           manifest = json.loads((root / "Packages/manifest.json").read_text(encoding="utf-8"))
           assert manifest["dependencies"]["com.unity.inputsystem"] == "1.16.0"
           for name in ("progress-card.svg", "progress-mini.svg", "progress-template.svg"):
