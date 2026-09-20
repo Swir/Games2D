@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 180" role="img" aria-labelledby="title description">
+  <title id="title">SCRAP DASH Level 1 progress: 0.0%</title>
+  <desc id="description">0 of 12 Level 1 deliverables verified. Status: in progress.</desc>
+  <defs>
+    <linearGradient id="progress" x1="0" x2="1"><stop stop-color="#0088FF"/><stop offset="1" stop-color="#62E5FF"/></linearGradient>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#143047" stroke-width="1" opacity=".3"/></pattern>
+  </defs>
+  <rect width="1200" height="180" rx="24" fill="#02050A"/>
+  <rect x="1" y="1" width="1198" height="178" rx="23" fill="url(#grid)" stroke="#16364A" stroke-width="2"/>
+  <text x="50" y="48" fill="#F4FAFF" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="700">SCRAP DASH</text>
+  <text x="50" y="82" fill="#8DA8B8" font-family="Segoe UI,Arial,sans-serif" font-size="19">Level 1 — Closing Time Circuit</text>
+  <text x="1150" y="54" text-anchor="end" fill="#62E5FF" font-family="Segoe UI,Arial,sans-serif" font-size="35" font-weight="700">0.0%</text>
+  <text x="1150" y="83" text-anchor="end" fill="#8DA8B8" font-family="Segoe UI,Arial,sans-serif" font-size="17">0/12 VERIFIED • IN PROGRESS</text>
+  <rect x="50" y="120" width="1100" height="20" rx="10" fill="#07111C" stroke="#16364A"/>
+  <text x="50" y="163" fill="#8DA8B8" font-family="Segoe UI,Arial,sans-serif" font-size="15">Source: games/001_scrap_dash/ROADMAP.md</text>
+</svg>

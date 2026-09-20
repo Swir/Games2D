@@ -21,6 +21,33 @@ env:
   UNITY_VERSION: 6000.3.13f1
 
 jobs:
+  source-contract:
+    name: Project and progress contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate project metadata and generated progress
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 games/001_scrap_dash/tools/generate_progress.py --check
+          python3 - <<'PY'
+          import json
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          root = Path("games/001_scrap_dash")
+          version = (root / "ProjectSettings/ProjectVersion.txt").read_text(encoding="utf-8")
+          assert "6000.3.13f1" in version
+          manifest = json.loads((root / "Packages/manifest.json").read_text(encoding="utf-8"))
+          assert manifest["dependencies"]["com.unity.inputsystem"] == "1.16.0"
+          for name in ("progress-card.svg", "progress-mini.svg", "progress-template.svg"):
+              ET.parse(root / "assets/readme" / name)
+          playmode = "\n".join(path.read_text(encoding="utf-8") for path in (root / "Assets/Tests/PlayMode").glob("*.cs"))
+          assert playmode.count("[UnityTest]") >= 9
+          PY
+
   tests:
     name: Unity EditMode + PlayMode
     runs-on: ubuntu-latest

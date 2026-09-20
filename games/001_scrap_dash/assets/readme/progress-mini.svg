@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 72" role="img" aria-labelledby="title description">
+  <title id="title">SCRAP DASH Level 1 progress: 0.0%</title>
+  <desc id="description">0 of 12 Level 1 deliverables verified.</desc>
+  <defs><linearGradient id="progress" x1="0" x2="1"><stop stop-color="#0088FF"/><stop offset="1" stop-color="#62E5FF"/></linearGradient></defs>
+  <rect width="900" height="72" rx="16" fill="#02050A" stroke="#16364A"/>
+  <text x="22" y="29" fill="#F4FAFF" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="700">LEVEL 1</text>
+  <text x="22" y="52" fill="#8DA8B8" font-family="Segoe UI,Arial,sans-serif" font-size="13">0/12 verified</text>
+  <rect x="170" y="39" width="700" height="14" rx="7" fill="#07111C" stroke="#16364A"/>
+  <text x="870" y="27" text-anchor="end" fill="#62E5FF" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="700">0.0% • IN PROGRESS</text>
+</svg>

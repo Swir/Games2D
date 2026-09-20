@@ -12,6 +12,12 @@
 
 The first playable level is **Closing Time Circuit**. The source currently targets Unity 6.3 LTS and uses the Unity Input System for keyboard and gamepad controls.
 
+## Level 1 progress
+
+![SCRAP DASH Level 1 verified progress](assets/readme/progress-card.svg)
+
+**Verified progress:** 0/12 = 0.0%. Runtime verification is pending a successful Unity CI activation.
+
 ## Current gameplay
 
 - run with acceleration and air control;
@@ -55,6 +61,8 @@ Pinned editor line: **Unity 6000.3.13f1 (Unity 6.3 LTS)**.
 ## Demo status
 
 A Windows demo is **not yet published**. It becomes downloadable only after Unity EditMode/PlayMode tests and the Windows x64 CI build pass on the exact project revision.
+
+The PlayMode evidence suite drives real Input System keyboard/gamepad devices and physical Level 1 triggers for movement, jump, dash, scrap collection, checkpoint respawn, hazards, the moving cart, Magnet Lift and the finish gate.
 
 ## Roadmap
 

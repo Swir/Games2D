@@ -2,6 +2,8 @@
 
 This roadmap tracks **verified playable deliverables**, not commit count or elapsed time.
 
+![Level 1 verified progress](assets/readme/progress-mini.svg)
+
 ## Level 1 — Closing Time Circuit
 
 - [ ] Unity 6.3 LTS project opens and compiles without errors

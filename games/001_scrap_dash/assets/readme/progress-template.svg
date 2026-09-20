@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 180" role="img" aria-labelledby="title description">
+  <title id="title">SWIR progress card template</title>
+  <desc id="description">Reusable template only. It does not contain project progress data.</desc>
+  <defs><linearGradient id="progress" x1="0" x2="1"><stop stop-color="#0088FF"/><stop offset="1" stop-color="#62E5FF"/></linearGradient></defs>
+  <rect width="1200" height="180" rx="24" fill="#02050A"/>
+  <rect x="1" y="1" width="1198" height="178" rx="23" fill="#07111C" stroke="#16364A" stroke-width="2"/>
+  <text x="50" y="52" fill="#F4FAFF" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="700">TEMPLATE / NOT PROJECT DATA</text>
+  <text x="50" y="88" fill="#8DA8B8" font-family="Segoe UI,Arial,sans-serif" font-size="18">Replace from an authoritative roadmap via the generator.</text>
+  <rect x="50" y="120" width="1100" height="20" rx="10" fill="#02050A" stroke="#16364A"/>
+  <text x="1150" y="88" text-anchor="end" fill="#62E5FF" font-family="Segoe UI,Arial,sans-serif" font-size="28" font-weight="700">N/A</text>
+</svg>
