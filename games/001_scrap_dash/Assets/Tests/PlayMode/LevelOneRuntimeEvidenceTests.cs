@@ -153,6 +153,87 @@ namespace ScrapDash.Tests
         }
 
         [UnityTest]
+        public IEnumerator GroundDashRunsItsFullBurstAndRestoresNormalPhysics()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            _keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return WaitForGrounding(player);
+            var normalGravity = player.Body.gravityScale;
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.LeftShift));
+            InputSystem.Update();
+            player.SendMessage("Update");
+
+            Assert.That(player.DashCount, Is.EqualTo(1));
+            Assert.That(player.AirDashCount, Is.Zero);
+            Assert.That(player.IsDashing, Is.True);
+            Assert.That(player.DashTrailEmitting, Is.True);
+            Assert.That(player.Body.gravityScale, Is.Zero);
+
+            for (var i = 0; i < 10; i++) player.SendMessage("FixedUpdate");
+
+            Assert.That(player.IsDashing, Is.False, "The burst must end instead of locking movement.");
+            Assert.That(player.TotalDashDistance, Is.GreaterThan(2.5f), "A dash must cover a meaningful gap.");
+            Assert.That(player.Body.gravityScale, Is.EqualTo(normalGravity));
+            Assert.That(player.DashTrailEmitting, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator PhysicalDashAttackRecyclesThePatrolEnemy()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            var enemy = Object.FindFirstObjectByType<PatrolEnemy>();
+            var game = Object.FindFirstObjectByType<ScrapDashGame>();
+            _keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return WaitForGrounding(player);
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.LeftShift));
+            InputSystem.Update();
+            player.SendMessage("Update");
+            Assert.That(player.IsDashing, Is.True);
+
+            player.transform.position = enemy.transform.position;
+            Physics2D.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            Assert.That(game.EnemiesDefeated, Is.EqualTo(1), "Dash contact must defeat the enemy.");
+            Assert.That(enemy == null, Is.True, "The defeated enemy must leave the route.");
+            Assert.That(game.Hits, Is.Zero, "A successful dash attack must not damage the player.");
+        }
+
+        [UnityTest]
+        public IEnumerator BounceImmediatelyRefreshesTheSingleAirDash()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            _keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return WaitForGrounding(player);
+
+            player.Bounce(6f);
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.LeftShift));
+            InputSystem.Update();
+            player.SendMessage("Update");
+            Assert.That(player.AirDashCount, Is.EqualTo(1));
+            Assert.That(player.AirDashReady, Is.False);
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState());
+            InputSystem.Update();
+            player.SendMessage("Update");
+            player.Bounce(6f);
+            Assert.That(player.AirDashReady, Is.True, "A spring or stomp bounce must recharge air dash.");
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.LeftShift));
+            InputSystem.Update();
+            player.SendMessage("Update");
+            Assert.That(player.IsDashing, Is.True);
+            Assert.That(player.DashCount, Is.EqualTo(2));
+            Assert.That(player.AirDashCount, Is.EqualTo(2));
+        }
+
+        [UnityTest]
         public IEnumerator PhysicalScrapTriggersUnlockTheFinishGate()
         {
             _root = ScrapDashBootstrap.BuildLevelForTests();

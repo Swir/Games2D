@@ -49,6 +49,10 @@ namespace ScrapDash
         public int BufferedJumpCount { get; private set; }
         public int JumpCutCount { get; private set; }
         public bool LastJumpUsedCoyoteTime { get; private set; }
+        public int DashCount { get; private set; }
+        public int AirDashCount { get; private set; }
+        public float TotalDashDistance { get; private set; }
+        public bool DashTrailEmitting => _dashTrail != null && _dashTrail.emitting;
 
         private void Awake()
         {
@@ -171,6 +175,7 @@ namespace ScrapDash
             {
                 _dashRemaining -= Time.fixedDeltaTime;
                 _body.linearVelocity = new Vector2(_facing * dashSpeed, 0f);
+                TotalDashDistance += Mathf.Abs(_body.linearVelocity.x) * Time.fixedDeltaTime;
                 if (_dashRemaining <= 0f) EndDash();
                 return;
             }
@@ -204,7 +209,13 @@ namespace ScrapDash
 
         private void StartDash()
         {
-            if (!IsGrounded) _airDashReady = false;
+            var startedInAir = !IsGrounded;
+            if (startedInAir)
+            {
+                _airDashReady = false;
+                AirDashCount++;
+            }
+            DashCount++;
             _dashRemaining = dashDuration;
             _dashCooldownRemaining = dashCooldown;
             _body.gravityScale = 0f;
@@ -250,6 +261,7 @@ namespace ScrapDash
         {
             EndDash();
             _airDashReady = true;
+            _dashCooldownRemaining = 0f;
             _groundContacts.Clear();
             _supportPlatform = null;
             _supportVelocity = Vector2.zero;
