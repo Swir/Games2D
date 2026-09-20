@@ -70,6 +70,32 @@ namespace ScrapDash.Tests
         }
 
         [UnityTest]
+        public IEnumerator ThreeEnemyHitsConsumeCoreThenRespawn()
+        {
+            var root = ScrapDashBootstrap.BuildLevelForTests();
+            var game = Object.FindFirstObjectByType<ScrapDashGame>();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            var spawn = (Vector2)player.transform.position;
+            yield return null;
+
+            game.NotifyHit();
+            game.NotifyHit();
+
+            Assert.That(game.Integrity, Is.EqualTo(1));
+            Assert.That(game.Deaths, Is.EqualTo(0));
+
+            player.transform.position = new Vector2(8f, 4f);
+            game.NotifyHit();
+
+            Assert.That(game.Integrity, Is.EqualTo(ScrapDashGame.MaxIntegrityValue));
+            Assert.That(game.Deaths, Is.EqualTo(1));
+            Assert.That((Vector2)player.transform.position, Is.EqualTo(spawn));
+
+            Object.Destroy(root);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator CheckpointRespawnRestoresPlayerPositionAndMotion()
         {
             var root = ScrapDashBootstrap.BuildLevelForTests();
