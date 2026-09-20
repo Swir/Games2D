@@ -7,6 +7,7 @@ namespace ScrapDash
     public sealed class ScrapDashGame : MonoBehaviour
     {
         private const string BestTimeKey = "scrap_dash_level_1_best_time";
+        private const int MaxIntegrity = 3;
 
         private static readonly Vector2Int[] DemoResolutions =
         {
@@ -23,6 +24,7 @@ namespace ScrapDash
         private int _hits;
         private int _deaths;
         private int _enemiesDefeated;
+        private int _integrity = MaxIntegrity;
         private float _elapsedSeconds;
         private float _bestSeconds;
         private bool _paused;
@@ -34,6 +36,8 @@ namespace ScrapDash
         public int Scrap => _scrap;
         public int Hits => _hits;
         public int Deaths => _deaths;
+        public int Integrity => _integrity;
+        public static int MaxIntegrityValue => MaxIntegrity;
         public float ElapsedSeconds => _elapsedSeconds;
         public float BestSeconds => _bestSeconds;
         public bool Won => _won;
@@ -69,6 +73,7 @@ namespace ScrapDash
         {
             _player = player;
             _checkpoint = spawn;
+            _integrity = MaxIntegrity;
         }
 
         public void CollectScrap()
@@ -79,8 +84,17 @@ namespace ScrapDash
 
         public void NotifyHit()
         {
+            if (_won) return;
+
             _hits++;
-            ShowMessage("OUCH! Recalibrating...");
+            _integrity = Mathf.Max(0, _integrity - 1);
+            if (_integrity <= 0)
+            {
+                RespawnPlayer();
+                return;
+            }
+
+            ShowMessage($"CORE INTEGRITY {_integrity}/{MaxIntegrity}");
         }
 
         public void NotifyEnemyDefeated()
@@ -99,6 +113,7 @@ namespace ScrapDash
         {
             if (_player == null || _won) return;
             _deaths++;
+            _integrity = MaxIntegrity;
             _player.transform.position = _checkpoint;
             _player.ResetMotion();
             ShowMessage("REBOOTED");
@@ -244,11 +259,11 @@ namespace ScrapDash
                 normal = { textColor = ProceduralVisuals.Hex("#62E5FF") }
             };
 
-            GUI.Box(new Rect(18, 18, 420, 118), string.Empty);
-            GUI.Label(new Rect(34, 28, 390, 34), $"SCRAP  {_scrap}/{LevelDefinition.TotalScrap}     TIME  {FormatTime(_elapsedSeconds)}", hudStyle);
+            GUI.Box(new Rect(18, 18, 470, 118), string.Empty);
+            GUI.Label(new Rect(34, 28, 440, 34), $"SCRAP  {_scrap}/{LevelDefinition.TotalScrap}     TIME  {FormatTime(_elapsedSeconds)}", hudStyle);
             GUI.Label(
-                new Rect(34, 64, 390, 28),
-                $"Goal: {LevelDefinition.ScrapRequiredForFinish}  •  Bots: {_enemiesDefeated}/{LevelDefinition.EnemyCount}  •  Deaths: {_deaths}",
+                new Rect(34, 64, 440, 28),
+                $"Core: {_integrity}/{MaxIntegrity}  •  Goal: {LevelDefinition.ScrapRequiredForFinish}  •  Bots: {_enemiesDefeated}/{LevelDefinition.EnemyCount}  •  Deaths: {_deaths}",
                 new GUIStyle(hudStyle) { fontSize = Mathf.Max(15, hudStyle.fontSize - 5) }
             );
             GUI.Label(
