@@ -188,12 +188,13 @@ namespace ScrapDash
             var checkpointCollider = checkpoint.AddComponent<BoxCollider2D>();
             checkpointCollider.isTrigger = true;
             checkpoint.AddComponent<Checkpoint>();
+            ProceduralVisuals.Rect("CheckpointBeacon", new Vector2(0f, 1.05f), new Vector2(0.42f, 0.42f), Yellow, checkpoint.transform, 12).AddComponent<CorePulse>();
 
-            var finish = ProceduralVisuals.Rect("FinishGate", new Vector2(25.5f, -0.85f), new Vector2(0.4f, 2.5f), Cyan, parent, 10);
+            var finish = ProceduralVisuals.Rect("FinishGate", new Vector2(25.5f, -0.85f), new Vector2(0.4f, 2.5f), Danger, parent, 10);
             var finishCollider = finish.AddComponent<BoxCollider2D>();
             finishCollider.isTrigger = true;
             finish.AddComponent<FinishGate>();
-            ProceduralVisuals.Rect("FinishTop", new Vector2(-0.65f, 1f), new Vector2(1.7f, 0.25f), Cyan, finish.transform, 11);
+            ProceduralVisuals.Rect("FinishTop", new Vector2(-0.65f, 1f), new Vector2(1.7f, 0.25f), Danger, finish.transform, 11);
         }
 
         private static void CreateWayfinding(Transform parent)

@@ -305,25 +305,73 @@ namespace ScrapDash
     public sealed class Checkpoint : MonoBehaviour
     {
         private bool _activated;
+        private int _activationCount;
+        private SpriteRenderer _renderer;
+        private SpriteRenderer _beacon;
+
+        public bool Activated => _activated;
+        public int ActivationCount => _activationCount;
+
+        private void Awake()
+        {
+            _renderer = GetComponent<SpriteRenderer>();
+            _beacon = transform.Find("CheckpointBeacon")?.GetComponent<SpriteRenderer>();
+        }
+
+        private void Update()
+        {
+            if (_beacon == null) return;
+
+            var pulse = 0.5f + Mathf.Sin(Time.unscaledTime * (_activated ? 10f : 4f)) * 0.5f;
+            _beacon.color = Color.Lerp(
+                _activated ? ProceduralVisuals.Hex("#0088FF") : ProceduralVisuals.Hex("#FFE066"),
+                Color.white,
+                pulse * (_activated ? 0.55f : 0.2f)
+            );
+        }
 
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (_activated || other.GetComponent<PlayerController>() == null) return;
             _activated = true;
+            _activationCount++;
             ScrapDashGame.Instance?.ActivateCheckpoint(transform.position + Vector3.up * 1.4f);
             FeedbackHub.Instance?.PlayCheckpoint(transform.position);
 
-            var renderer = GetComponent<SpriteRenderer>();
-            if (renderer != null) renderer.color = ProceduralVisuals.Hex("#62E5FF");
+            if (_renderer != null) _renderer.color = ProceduralVisuals.Hex("#62E5FF");
         }
     }
 
     public sealed class FinishGate : MonoBehaviour
     {
+        private SpriteRenderer _renderer;
+        private SpriteRenderer _top;
+
+        public int EntryAttempts { get; private set; }
+        public int LockedAttempts { get; private set; }
+        public bool IsUnlocked => ScrapDashGame.Instance != null && ScrapDashGame.Instance.ScrapObjectiveMet;
+
+        private void Awake()
+        {
+            _renderer = GetComponent<SpriteRenderer>();
+            _top = transform.Find("FinishTop")?.GetComponent<SpriteRenderer>();
+        }
+
+        private void Update()
+        {
+            var baseColor = IsUnlocked ? ProceduralVisuals.Hex("#62E5FF") : ProceduralVisuals.Hex("#FF426D");
+            var pulse = 0.5f + Mathf.Sin(Time.unscaledTime * (IsUnlocked ? 9f : 4f)) * 0.5f;
+            var color = Color.Lerp(baseColor, Color.white, pulse * (IsUnlocked ? 0.42f : 0.16f));
+            if (_renderer != null) _renderer.color = color;
+            if (_top != null) _top.color = color;
+        }
+
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (other.GetComponent<PlayerController>() != null)
             {
+                EntryAttempts++;
+                if (!IsUnlocked) LockedAttempts++;
                 ScrapDashGame.Instance?.TryFinish();
             }
         }

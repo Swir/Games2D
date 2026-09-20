@@ -79,8 +79,11 @@ namespace ScrapDash.Tests
             var player = Object.FindFirstObjectByType<PlayerController>();
             var game = Object.FindFirstObjectByType<ScrapDashGame>();
             var scrap = Object.FindObjectsByType<ScrapCollectible>(FindObjectsSortMode.None);
+            var finish = Object.FindFirstObjectByType<FinishGate>();
             Object.FindFirstObjectByType<PatrolEnemy>().gameObject.SetActive(false);
             yield return null;
+
+            Assert.That(finish.IsUnlocked, Is.False);
 
             for (var i = 0; i < LevelDefinition.ScrapRequiredForFinish; i++)
             {
@@ -92,15 +95,79 @@ namespace ScrapDash.Tests
             }
 
             Assert.That(game.Scrap, Is.EqualTo(LevelDefinition.ScrapRequiredForFinish));
+            Assert.That(finish.IsUnlocked, Is.True);
 
-            var finish = Object.FindFirstObjectByType<FinishGate>();
             player.transform.position = finish.transform.position;
             player.Body.linearVelocity = Vector2.zero;
             Physics2D.SyncTransforms();
             yield return new WaitForFixedUpdate();
 
             Assert.That(game.Won, Is.True, "The real finish trigger must complete the level.");
+            Assert.That(finish.EntryAttempts, Is.EqualTo(1));
 
+        }
+
+        [UnityTest]
+        public IEnumerator CompletePhysicalLoopLocksThenRebootsAndReachesTheWinScreen()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            var game = Object.FindFirstObjectByType<ScrapDashGame>();
+            var finish = Object.FindFirstObjectByType<FinishGate>();
+            var checkpoint = Object.FindFirstObjectByType<Checkpoint>();
+            var scrap = Object.FindObjectsByType<ScrapCollectible>(FindObjectsSortMode.None);
+            Object.FindFirstObjectByType<PatrolEnemy>().gameObject.SetActive(false);
+            yield return null;
+
+            player.transform.position = finish.transform.position;
+            player.Body.linearVelocity = Vector2.zero;
+            Physics2D.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            Assert.That(game.Won, Is.False, "The finish must stay locked before the scrap objective.");
+            Assert.That(finish.LockedAttempts, Is.EqualTo(1));
+
+            player.transform.position = checkpoint.transform.position;
+            player.Body.linearVelocity = Vector2.zero;
+            Physics2D.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            Assert.That(checkpoint.Activated, Is.True);
+            Assert.That(checkpoint.ActivationCount, Is.EqualTo(1));
+
+            var hazards = Object.FindObjectsByType<Hazard>(FindObjectsSortMode.None);
+            Hazard arcPad = null;
+            foreach (var hazard in hazards)
+            {
+                if (hazard.name == "ArcPad") arcPad = hazard;
+            }
+
+            Assert.That(arcPad, Is.Not.Null);
+            player.transform.position = arcPad.transform.position;
+            player.Body.linearVelocity = Vector2.zero;
+            Physics2D.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            Assert.That(game.Deaths, Is.EqualTo(1));
+            Assert.That((Vector2)player.transform.position, Is.EqualTo(game.Checkpoint));
+
+            foreach (var piece in scrap)
+            {
+                player.transform.position = piece.transform.position;
+                player.Body.linearVelocity = Vector2.zero;
+                Physics2D.SyncTransforms();
+                yield return new WaitForFixedUpdate();
+                yield return null;
+            }
+
+            Assert.That(game.Scrap, Is.EqualTo(LevelDefinition.TotalScrap));
+            Assert.That(finish.IsUnlocked, Is.True);
+
+            player.transform.position = finish.transform.position;
+            player.Body.linearVelocity = Vector2.zero;
+            Physics2D.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(game.Won, Is.True, "The complete physical loop must reach the win state.");
+            Assert.That(finish.EntryAttempts, Is.EqualTo(2));
+            Assert.That(finish.LockedAttempts, Is.EqualTo(1));
         }
 
         [UnityTest]
@@ -151,6 +218,8 @@ namespace ScrapDash.Tests
 
             var activatedPoint = game.Checkpoint;
             Assert.That(activatedPoint.y, Is.GreaterThan(checkpoint.transform.position.y));
+            Assert.That(checkpoint.Activated, Is.True);
+            Assert.That(checkpoint.ActivationCount, Is.EqualTo(1));
 
             var hazards = Object.FindObjectsByType<Hazard>(FindObjectsSortMode.None);
             Hazard visibleHazard = null;

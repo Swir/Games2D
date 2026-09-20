@@ -64,7 +64,7 @@ Pinned editor line: **Unity 6000.3.13f1 (Unity 6.3 LTS)**.
 
 A Windows demo is **not yet published**. It becomes downloadable only after Unity EditMode/PlayMode tests and the Windows x64 CI build pass on the exact project revision.
 
-The PlayMode evidence suite drives real Input System keyboard/gamepad devices and physical Level 1 triggers for movement, jump, dash, scrap collection, checkpoint respawn, hazards, the moving cart, Magnet Lift and the finish gate.
+The PlayMode evidence suite drives real Input System keyboard/gamepad devices and physical Level 1 triggers for movement, jump, dash, scrap collection, checkpoint respawn, hazards, the moving cart, Magnet Lift and a complete locked-gate-to-win loop.
 
 ## Roadmap
 
