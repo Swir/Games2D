@@ -79,6 +79,7 @@ namespace ScrapDash.Tests
             var player = Object.FindFirstObjectByType<PlayerController>();
             var game = Object.FindFirstObjectByType<ScrapDashGame>();
             var scrap = Object.FindObjectsByType<ScrapCollectible>(FindObjectsSortMode.None);
+            Object.FindFirstObjectByType<PatrolEnemy>().gameObject.SetActive(false);
             yield return null;
 
             for (var i = 0; i < LevelDefinition.ScrapRequiredForFinish; i++)
@@ -100,6 +101,38 @@ namespace ScrapDash.Tests
 
             Assert.That(game.Won, Is.True, "The real finish trigger must complete the level.");
 
+        }
+
+        [UnityTest]
+        public IEnumerator AllFivePhysicalScrapsUpdateTheHudAndRemainCollected()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            var game = Object.FindFirstObjectByType<ScrapDashGame>();
+            var scrap = Object.FindObjectsByType<ScrapCollectible>(FindObjectsSortMode.None);
+            yield return null;
+
+            Assert.That(scrap.Length, Is.EqualTo(LevelDefinition.TotalScrap));
+            Assert.That(game.ScrapHudText, Is.EqualTo("SCRAP 0/5"));
+
+            foreach (var piece in scrap)
+            {
+                player.transform.position = piece.transform.position;
+                player.Body.linearVelocity = Vector2.zero;
+                Physics2D.SyncTransforms();
+                yield return new WaitForFixedUpdate();
+                yield return null;
+            }
+
+            Assert.That(game.Scrap, Is.EqualTo(LevelDefinition.TotalScrap));
+            Assert.That(game.ScrapRemaining, Is.Zero);
+            Assert.That(game.ScrapObjectiveMet, Is.True);
+            Assert.That(game.ScrapHudText, Is.EqualTo("SCRAP 5/5"));
+            Assert.That(
+                Object.FindObjectsByType<ScrapCollectible>(FindObjectsSortMode.None).Length,
+                Is.Zero,
+                "Every collected part must stay removed for the rest of the run."
+            );
         }
 
         [UnityTest]

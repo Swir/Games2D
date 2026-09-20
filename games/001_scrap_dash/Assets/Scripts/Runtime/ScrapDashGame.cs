@@ -35,6 +35,9 @@ namespace ScrapDash
         private int _resolutionIndex = 2;
 
         public int Scrap => _scrap;
+        public int ScrapRemaining => Mathf.Max(0, LevelDefinition.TotalScrap - _scrap);
+        public bool ScrapObjectiveMet => _scrap >= LevelDefinition.ScrapRequiredForFinish;
+        public string ScrapHudText => $"SCRAP {_scrap}/{LevelDefinition.TotalScrap}";
         public int Hits => _hits;
         public int Deaths => _deaths;
         public int Integrity => _integrity;
@@ -272,8 +275,8 @@ namespace ScrapDash
                 normal = { textColor = ProceduralVisuals.Hex("#62E5FF") }
             };
 
-            GUI.Box(new Rect(18, 18, 470, 118), string.Empty);
-            GUI.Label(new Rect(34, 28, 440, 34), $"SCRAP  {_scrap}/{LevelDefinition.TotalScrap}     TIME  {FormatTime(_elapsedSeconds)}", hudStyle);
+            GUI.Box(new Rect(18, 18, 500, 142), string.Empty);
+            GUI.Label(new Rect(34, 28, 465, 34), $"{ScrapHudText}     TIME {FormatTime(_elapsedSeconds)}", hudStyle);
             GUI.Label(
                 new Rect(34, 64, 440, 28),
                 $"Core: {_integrity}/{MaxIntegrity}  •  Goal: {LevelDefinition.ScrapRequiredForFinish}  •  Bots: {_enemiesDefeated}/{LevelDefinition.EnemyCount}  •  Deaths: {_deaths}",
@@ -283,6 +286,15 @@ namespace ScrapDash
                 new Rect(34, 91, 390, 28),
                 _bestSeconds > 0f ? $"Best: {FormatTime(_bestSeconds)}  •  Hits: {_hits}" : $"Best: --:--.--  •  Hits: {_hits}",
                 new GUIStyle(hudStyle) { fontSize = Mathf.Max(14, hudStyle.fontSize - 7) }
+            );
+            GUI.Label(
+                new Rect(34, 116, 465, 28),
+                ScrapObjectiveMet ? "EXIT CHARGE READY — REACH THE GATE" : $"EXIT LOCKED — COLLECT {LevelDefinition.ScrapRequiredForFinish - _scrap} MORE",
+                new GUIStyle(hudStyle)
+                {
+                    fontSize = Mathf.Max(14, hudStyle.fontSize - 7),
+                    normal = { textColor = ScrapObjectiveMet ? ProceduralVisuals.Hex("#62E5FF") : ProceduralVisuals.Hex("#FFE066") }
+                }
             );
 
             if (Time.unscaledTime < _messageUntil && !string.IsNullOrEmpty(_message))

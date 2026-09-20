@@ -253,6 +253,7 @@ namespace ScrapDash
         {
             var scrap = ProceduralVisuals.Rect(name, position, new Vector2(0.38f, 0.38f), Yellow, parent, 15);
             scrap.transform.rotation = Quaternion.Euler(0f, 0f, 45f);
+            ProceduralVisuals.Rect("EnergyCore", Vector2.zero, new Vector2(0.18f, 0.18f), Cyan, scrap.transform, 16);
             var collider = scrap.AddComponent<CircleCollider2D>();
             collider.isTrigger = true;
             collider.radius = 0.7f;

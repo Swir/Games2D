@@ -39,6 +39,28 @@ namespace ScrapDash
     public sealed class ScrapCollectible : MonoBehaviour
     {
         private bool _collected;
+        private Vector3 _baseLocalPosition;
+        private Vector3 _baseScale;
+        private float _phase;
+
+        public bool Collected => _collected;
+
+        private void Start()
+        {
+            _baseLocalPosition = transform.localPosition;
+            _baseScale = transform.localScale;
+            _phase = Mathf.Abs(transform.position.x * 0.73f) % (Mathf.PI * 2f);
+        }
+
+        private void Update()
+        {
+            if (_collected) return;
+
+            var time = Time.unscaledTime;
+            transform.localPosition = _baseLocalPosition + Vector3.up * (Mathf.Sin(time * 3.2f + _phase) * 0.09f);
+            transform.Rotate(0f, 0f, 75f * Time.unscaledDeltaTime);
+            transform.localScale = _baseScale * (1f + Mathf.Sin(time * 5f + _phase) * 0.1f);
+        }
 
         private void OnTriggerEnter2D(Collider2D other)
         {
