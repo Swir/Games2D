@@ -30,10 +30,18 @@ namespace ScrapDash
         [SerializeField] private float leftX;
         [SerializeField] private float rightX;
         [SerializeField] private float speed = 2.6f;
+        [SerializeField] private float chargeSpeed = 5.2f;
+        [SerializeField] private float alertDistance = 3.2f;
+        [SerializeField] private float verticalAlertRange = 1.6f;
         private int _direction = 1;
         private bool _defeated;
+        private bool _alerted;
+        private Transform _player;
+        private SpriteRenderer _eye;
+        private Vector3 _eyeScale = Vector3.one;
 
         public bool Defeated => _defeated;
+        public bool IsAlerted => _alerted;
 
         public void Configure(float left, float right, float moveSpeed)
         {
@@ -42,10 +50,28 @@ namespace ScrapDash
             speed = moveSpeed;
         }
 
+        private void Start()
+        {
+            _player = FindFirstObjectByType<PlayerController>()?.transform;
+            _eye = transform.Find("EnemyEye")?.GetComponent<SpriteRenderer>();
+            if (_eye != null) _eyeScale = _eye.transform.localScale;
+        }
+
         private void Update()
         {
+            if (_defeated) return;
+
             var position = transform.position;
-            position.x += _direction * speed * Time.deltaTime;
+            var playerDelta = _player == null ? Vector2.positiveInfinity : (Vector2)(_player.position - position);
+            _alerted = Mathf.Abs(playerDelta.x) <= alertDistance
+                && Mathf.Abs(playerDelta.y) <= verticalAlertRange;
+
+            if (_alerted && Mathf.Abs(playerDelta.x) > 0.1f)
+            {
+                _direction = playerDelta.x > 0f ? 1 : -1;
+            }
+
+            position.x += _direction * (_alerted ? chargeSpeed : speed) * Time.deltaTime;
 
             if (position.x >= rightX)
             {
@@ -59,6 +85,18 @@ namespace ScrapDash
             }
 
             transform.position = position;
+            UpdateWarningVisual();
+        }
+
+        private void UpdateWarningVisual()
+        {
+            if (_eye == null) return;
+
+            _eye.color = _alerted
+                ? new Color(1f, 0.18f, 0.32f, 1f)
+                : new Color(1f, 0.88f, 0.4f, 1f);
+            var pulse = _alerted ? 1.15f + Mathf.Sin(Time.time * 20f) * 0.2f : 1f;
+            _eye.transform.localScale = _eyeScale * pulse;
         }
 
         private void OnTriggerEnter2D(Collider2D other)

@@ -160,6 +160,33 @@ namespace ScrapDash.Tests
         }
 
         [UnityTest]
+        public IEnumerator PhysicalPatrolEnemyWarnsChargesAndDamagesThePlayer()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            var enemy = Object.FindFirstObjectByType<PatrolEnemy>();
+            var game = Object.FindFirstObjectByType<ScrapDashGame>();
+            yield return null;
+
+            player.transform.position = (Vector2)enemy.transform.position + new Vector2(-2.2f, 0f);
+            player.Body.linearVelocity = Vector2.zero;
+            Physics2D.SyncTransforms();
+            yield return null;
+
+            Assert.That(enemy.IsAlerted, Is.True, "Enemy must visibly enter its charge state before contact.");
+
+            player.transform.position = enemy.transform.position;
+            player.Body.linearVelocity = Vector2.zero;
+            Physics2D.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            Assert.That(game.Hits, Is.EqualTo(1), "The real enemy trigger must register exactly one hit.");
+            Assert.That(game.Integrity, Is.EqualTo(ScrapDashGame.MaxIntegrityValue - 1));
+            Assert.That(player.Body.linearVelocity.y, Is.GreaterThan(0f), "Enemy contact must knock the player clear.");
+        }
+
+        [UnityTest]
         public IEnumerator FollowCameraKeepsTheCriticalRouteReadableAndSnapsAfterRespawn()
         {
             _root = ScrapDashBootstrap.BuildLevelForTests();

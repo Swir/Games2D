@@ -25,7 +25,7 @@ The first playable level is **Closing Time Circuit**. The source currently targe
 - horizontal dash;
 - moving runaway-cart platform;
 - electric hazards and checkpoint respawn;
-- a patrol enemy;
+- a warning-eye patrol enemy that accelerates into a short-range charge;
 - stomp attack that recycles the patrol enemy and bounces the player;
 - five collectible scrap pieces;
 - a salvage spring launch into the Magnet Lift section;
