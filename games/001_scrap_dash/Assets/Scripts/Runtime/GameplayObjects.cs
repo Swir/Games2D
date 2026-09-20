@@ -186,8 +186,11 @@ namespace ScrapDash
         private float _distance;
         private float _travel;
         private Vector2 _velocity;
+        private float _totalDistanceMoved;
 
         public Vector2 Velocity => _velocity;
+        public float TotalDistanceMoved => _totalDistanceMoved;
+        public float NormalizedProgress => _distance <= 0.001f ? 0f : Mathf.PingPong(_travel, _distance) / _distance;
 
         public void Configure(Vector2 a, Vector2 b, float moveSpeed)
         {
@@ -213,6 +216,7 @@ namespace ScrapDash
             var t = loop / _distance;
             var target = Vector2.Lerp(pointA, pointB, t);
             _velocity = (target - _body.position) / Time.fixedDeltaTime;
+            _totalDistanceMoved += Vector2.Distance(_body.position, target);
             _body.MovePosition(target);
         }
     }
@@ -220,16 +224,49 @@ namespace ScrapDash
     public sealed class MagnetZone : MonoBehaviour
     {
         [SerializeField] private Vector2 force = new(0f, 36f);
+        private SpriteRenderer _renderer;
+        private Color _baseColor;
+        private int _activeRiders;
+
+        public Vector2 Force => force;
+        public int ActiveRiders => _activeRiders;
+        public bool IsEnergized => _activeRiders > 0;
+
+        private void Awake()
+        {
+            _renderer = GetComponent<SpriteRenderer>();
+            if (_renderer != null) _baseColor = _renderer.color;
+        }
 
         public void Configure(Vector2 magnetForce)
         {
             force = magnetForce;
         }
 
+        private void Update()
+        {
+            if (_renderer == null) return;
+
+            var pulse = 0.5f + Mathf.Sin(Time.unscaledTime * (IsEnergized ? 13f : 5f)) * 0.5f;
+            var color = _baseColor;
+            color.a = IsEnergized ? Mathf.Lerp(0.28f, 0.48f, pulse) : Mathf.Lerp(0.12f, 0.2f, pulse);
+            _renderer.color = color;
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (other.GetComponent<PlayerController>() != null) _activeRiders++;
+        }
+
         private void OnTriggerStay2D(Collider2D other)
         {
             var player = other.GetComponent<PlayerController>();
             if (player != null) player.ApplyMagnet(force);
+        }
+
+        private void OnTriggerExit2D(Collider2D other)
+        {
+            if (other.GetComponent<PlayerController>() != null) _activeRiders = Mathf.Max(0, _activeRiders - 1);
         }
     }
 

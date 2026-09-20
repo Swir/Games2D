@@ -210,6 +210,8 @@ namespace ScrapDash.Tests
             var moverStart = (Vector2)mover.transform.position;
             for (var i = 0; i < 8; i++) yield return new WaitForFixedUpdate();
             Assert.That(Vector2.Distance(moverStart, mover.transform.position), Is.GreaterThan(0.05f));
+            Assert.That(mover.TotalDistanceMoved, Is.GreaterThan(0.05f));
+            Assert.That(mover.NormalizedProgress, Is.InRange(0f, 1f));
 
             player.transform.position = magnet.transform.position;
             player.Body.linearVelocity = Vector2.zero;
@@ -217,6 +219,9 @@ namespace ScrapDash.Tests
             for (var i = 0; i < 8; i++) yield return new WaitForFixedUpdate();
 
             Assert.That(player.Body.linearVelocity.y, Is.GreaterThan(0f), "Magnet Lift must overcome gravity.");
+            Assert.That(magnet.IsEnergized, Is.True, "Magnet Lift must visibly energize while carrying the player.");
+            Assert.That(magnet.ActiveRiders, Is.EqualTo(1));
+            Assert.That(magnet.Force.y, Is.GreaterThan(0f));
 
         }
 

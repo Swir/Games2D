@@ -138,6 +138,10 @@ namespace ScrapDash
             var mover = CreatePlatform(parent, "RunawayCart", new Vector2(3.2f, -1.4f), new Vector2(2.4f, 0.45f), true);
             var moving = mover.AddComponent<MovingPlatform>();
             moving.Configure(new Vector2(2.4f, -1.4f), new Vector2(5.2f, -0.4f), 2.1f);
+            ProceduralVisuals.Rect("CartCab", new Vector2(0f, 0.58f), new Vector2(0.62f, 1.15f), Blue, mover.transform, 10);
+            ProceduralVisuals.Rect("CartBeacon", new Vector2(0f, 1.2f), new Vector2(0.2f, 0.2f), Yellow, mover.transform, 12).AddComponent<CorePulse>();
+            ProceduralVisuals.Rect("CartWheelLeft", new Vector2(-0.3f, -0.64f), new Vector2(0.2f, 0.36f), Cyan, mover.transform, 10);
+            ProceduralVisuals.Rect("CartWheelRight", new Vector2(0.3f, -0.64f), new Vector2(0.2f, 0.36f), Cyan, mover.transform, 10);
 
             CreateRail(parent, new Vector2(16.9f, -1f), new Vector2(0.12f, 6f));
             CreateRail(parent, new Vector2(19.4f, -0.1f), new Vector2(0.12f, 4f));

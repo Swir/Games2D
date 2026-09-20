@@ -23,12 +23,12 @@ The first playable level is **Closing Time Circuit**. The source currently targe
 - run with acceleration and air control;
 - variable jump, coyote time and jump buffering;
 - horizontal dash;
-- moving runaway-cart platform;
+- moving runaway-cart platform with a pulsing beacon and measurable route progress;
 - pulsing electric hazards, fatal-impact feedback and safe checkpoint/fall recovery;
 - a warning-eye patrol enemy that accelerates into a short-range charge;
 - stomp attack that recycles the patrol enemy and bounces the player;
 - five animated cyan-core scrap pieces with persistent per-run collection and exit-ready HUD feedback;
-- a salvage spring launch into the Magnet Lift section;
+- a salvage spring launch into a visibly energized Magnet Lift section;
 - moving-platform velocity carry for reliable keyboard and gamepad traversal;
 - velocity-aware camera look-ahead, bounded framing and instant respawn recentering;
 - pulsing cyan/yellow route chevrons for gaps, the cart, Magnet Lift and finish;
