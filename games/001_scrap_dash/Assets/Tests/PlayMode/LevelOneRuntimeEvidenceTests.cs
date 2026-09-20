@@ -168,6 +168,48 @@ namespace ScrapDash.Tests
             Assert.That(game.Won, Is.True, "The complete physical loop must reach the win state.");
             Assert.That(finish.EntryAttempts, Is.EqualTo(2));
             Assert.That(finish.LockedAttempts, Is.EqualTo(1));
+            Assert.That(game.CenterPanelVisible, Is.True);
+            Assert.That(game.CenterPanelTitle, Does.Contain("LEVEL 1 COMPLETE"));
+            Assert.That(game.CenterPanelSubtitle, Does.Contain("R / Back to replay"));
+        }
+
+        [UnityTest]
+        public IEnumerator KeyboardAndGamepadPauseAndRestartControlsAreWired()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var game = Object.FindFirstObjectByType<ScrapDashGame>();
+            _keyboard = InputSystem.AddDevice<Keyboard>();
+            _gamepad = InputSystem.AddDevice<Gamepad>();
+            yield return null;
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.Escape));
+            InputSystem.Update();
+            game.SendMessage("Update");
+            Assert.That(game.Paused, Is.True);
+            Assert.That(game.BlocksPlayerControl, Is.True);
+            Assert.That(game.CenterPanelTitle, Is.EqualTo("PAUSED"));
+            Assert.That(Time.timeScale, Is.Zero);
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState());
+            InputSystem.Update();
+            game.SendMessage("Update");
+            InputSystem.QueueStateEvent(_gamepad, new GamepadState().WithButton(GamepadButton.Start));
+            InputSystem.Update();
+            game.SendMessage("Update");
+            Assert.That(game.Paused, Is.False);
+            Assert.That(Time.timeScale, Is.EqualTo(1f));
+
+            InputSystem.QueueStateEvent(_gamepad, new GamepadState());
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.R));
+            InputSystem.Update();
+            game.SendMessage("Update");
+            Assert.That(game.RestartRequests, Is.EqualTo(1), "R must request a safe level reload.");
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState());
+            InputSystem.QueueStateEvent(_gamepad, new GamepadState().WithButton(GamepadButton.Select));
+            InputSystem.Update();
+            game.SendMessage("Update");
+            Assert.That(game.RestartRequests, Is.EqualTo(2), "Gamepad Back must request a safe level reload.");
         }
 
         [UnityTest]

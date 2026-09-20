@@ -45,7 +45,7 @@ jobs:
           for name in ("progress-card.svg", "progress-mini.svg", "progress-template.svg"):
               ET.parse(root / "assets/readme" / name)
           playmode = "\n".join(path.read_text(encoding="utf-8") for path in (root / "Assets/Tests/PlayMode").glob("*.cs"))
-          assert playmode.count("[UnityTest]") >= 15
+          assert playmode.count("[UnityTest]") >= 16
           PY
 
   tests:
@@ -69,6 +69,7 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           projectPath: ${{ env.PROJECT_PATH }}
           unityVersion: ${{ env.UNITY_VERSION }}
@@ -103,6 +104,7 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           projectPath: ${{ env.PROJECT_PATH }}
           unityVersion: ${{ env.UNITY_VERSION }}

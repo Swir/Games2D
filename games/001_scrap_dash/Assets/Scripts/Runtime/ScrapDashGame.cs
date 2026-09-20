@@ -47,6 +47,12 @@ namespace ScrapDash
         public bool Won => _won;
         public bool Paused => _paused;
         public bool BlocksPlayerControl => _paused || _won;
+        public bool CenterPanelVisible => _paused || _won;
+        public string CenterPanelTitle => _won ? $"LEVEL 1 COMPLETE!  GRADE {GetRunGrade()}" : _paused ? "PAUSED" : string.Empty;
+        public string CenterPanelSubtitle => _won
+            ? $"Time {FormatTime(_elapsedSeconds)}  •  Best {FormatTime(_bestSeconds)}  •  Deaths {_deaths}\nRecovered {_scrap}/{LevelDefinition.TotalScrap} scrap  •  R / Back to replay"
+            : _paused ? "Esc / Start to resume" : string.Empty;
+        public int RestartRequests { get; private set; }
         public Vector2 Checkpoint => _checkpoint;
         public int EnemiesDefeated => _enemiesDefeated;
         public bool RespawnFlashActive => Time.unscaledTime < _respawnFlashUntil;
@@ -251,8 +257,13 @@ namespace ScrapDash
 
         private void RestartLevel()
         {
+            RestartRequests++;
             Time.timeScale = 1f;
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            var scene = SceneManager.GetActiveScene();
+            if (scene.buildIndex >= 0)
+            {
+                SceneManager.LoadScene(scene.buildIndex);
+            }
         }
 
         private void OnGUI()
@@ -318,13 +329,9 @@ namespace ScrapDash
             GUI.Label(new Rect(18, height - 43, width - 36, 24),
                 "Pause Esc/Start  •  Restart R/Back  •  F11/L3 Fullscreen  •  F10/R3 Resolution  •  [ ]/LB RB Volume", helpStyle);
 
-            if (_paused) DrawCenterPanel("PAUSED", "Esc / Start to resume");
-            if (_won)
+            if (CenterPanelVisible)
             {
-                DrawCenterPanel(
-                    $"LEVEL 1 COMPLETE!  GRADE {GetRunGrade()}",
-                    $"Time {FormatTime(_elapsedSeconds)}  •  Best {FormatTime(_bestSeconds)}  •  Deaths {_deaths}\nRecovered {_scrap}/{LevelDefinition.TotalScrap} scrap  •  R / Back to replay"
-                );
+                DrawCenterPanel(CenterPanelTitle, CenterPanelSubtitle);
             }
         }
 
