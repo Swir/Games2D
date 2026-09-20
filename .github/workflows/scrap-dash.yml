@@ -62,14 +62,46 @@ jobs:
           restore-keys: |
             scrap-dash-library-tests-
 
+      - name: Normalize Unity Personal license
+        shell: bash
+        env:
+          RAW_UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          raw = os.environ.get("RAW_UNITY_LICENSE", "")
+          if not raw:
+              raise SystemExit("UNITY_LICENSE secret is empty")
+
+          # GitHub secrets can preserve a BOM/leading newline or Windows CRLF
+          # from copy/paste. Unity's ULF parser expects XML from byte 0.
+          value = raw.replace("\r\n", "\n").replace("\r", "\n")
+          value = value.lstrip("\ufeff \t\n")
+
+          if value.startswith('"') and value.endswith('"'):
+              value = value[1:-1].strip()
+
+          if not value.startswith("<"):
+              raise SystemExit("UNITY_LICENSE is present but does not start with XML after normalization")
+
+          env_file = Path(os.environ["GITHUB_ENV"])
+          with env_file.open("a", encoding="utf-8", newline="\n") as handle:
+              handle.write("UNITY_LICENSE_NORMALIZED<<__SCRAP_DASH_ULF__\n")
+              handle.write(value)
+              if not value.endswith("\n"):
+                  handle.write("\n")
+              handle.write("__SCRAP_DASH_ULF__\n")
+          PY
+
       - name: Run Unity tests
         id: unityTests
-        uses: game-ci/unity-test-runner@v4
+        uses: game-ci/unity-test-runner@v4.3.1
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_LICENSE: ${{ env.UNITY_LICENSE_NORMALIZED }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           projectPath: ${{ env.PROJECT_PATH }}
           unityVersion: ${{ env.UNITY_VERSION }}
@@ -98,8 +130,41 @@ jobs:
           restore-keys: |
             scrap-dash-library-windows-
 
+      - name: Normalize Unity Personal license
+        shell: bash
+        env:
+          RAW_UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          raw = os.environ.get("RAW_UNITY_LICENSE", "")
+          if not raw:
+              raise SystemExit("UNITY_LICENSE secret is empty")
+
+          # GitHub secrets can preserve a BOM/leading newline or Windows CRLF
+          # from copy/paste. Unity's ULF parser expects XML from byte 0.
+          value = raw.replace("\r\n", "\n").replace("\r", "\n")
+          value = value.lstrip("\ufeff \t\n")
+
+          if value.startswith('"') and value.endswith('"'):
+              value = value[1:-1].strip()
+
+          if not value.startswith("<"):
+              raise SystemExit("UNITY_LICENSE is present but does not start with XML after normalization")
+
+          env_file = Path(os.environ["GITHUB_ENV"])
+          with env_file.open("a", encoding="utf-8", newline="\n") as handle:
+              handle.write("UNITY_LICENSE_NORMALIZED<<__SCRAP_DASH_ULF__\n")
+              handle.write(value)
+              if not value.endswith("\n"):
+                  handle.write("\n")
+              handle.write("__SCRAP_DASH_ULF__\n")
+          PY
+
       - name: Build Windows x64
-        uses: game-ci/unity-builder@v4
+        uses: game-ci/unity-builder@v4.8.1
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
