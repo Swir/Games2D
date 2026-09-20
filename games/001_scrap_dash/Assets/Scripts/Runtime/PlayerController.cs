@@ -38,6 +38,7 @@ namespace ScrapDash
         private Vector2 _supportVelocity;
         private MovingPlatform _supportPlatform;
         private TrailRenderer _dashTrail;
+        private SpriteRenderer[] _visualRenderers;
         private bool _airDashReady = true;
         private bool _jumpPressedWhileAirborne;
 
@@ -53,12 +54,16 @@ namespace ScrapDash
         public int AirDashCount { get; private set; }
         public float TotalDashDistance { get; private set; }
         public bool DashTrailEmitting => _dashTrail != null && _dashTrail.emitting;
+        public bool IsInvulnerable => Time.unscaledTime < _invulnerableUntil;
 
         private void Awake()
         {
             _body = GetComponent<Rigidbody2D>();
             _defaultGravity = _body.gravityScale;
             _visualRoot = transform.Find("Visual");
+            _visualRenderers = _visualRoot != null
+                ? _visualRoot.GetComponentsInChildren<SpriteRenderer>(true)
+                : System.Array.Empty<SpriteRenderer>();
             _dashTrail = GetComponent<TrailRenderer>();
 
             _move = new InputAction("Move", InputActionType.Value);
@@ -97,6 +102,7 @@ namespace ScrapDash
             _move?.Disable();
             _jump?.Disable();
             _dash?.Disable();
+            SetVisualAlpha(1f);
         }
 
         private void OnDestroy()
@@ -108,6 +114,7 @@ namespace ScrapDash
 
         private void Update()
         {
+            UpdateRecoveryVisual();
             if (ScrapDashGame.Instance?.BlocksPlayerControl == true)
             {
                 _moveX = 0f;
@@ -246,7 +253,7 @@ namespace ScrapDash
 
         public void TakeHit(Vector2 source)
         {
-            if (Time.unscaledTime < _invulnerableUntil) return;
+            if (IsInvulnerable) return;
             _invulnerableUntil = Time.unscaledTime + 0.8f;
             EndDash();
 
@@ -283,6 +290,24 @@ namespace ScrapDash
             _invulnerableUntil = Time.unscaledTime + 0.65f;
             _body.linearVelocity = Vector2.zero;
             _body.angularVelocity = 0f;
+        }
+
+        private void UpdateRecoveryVisual()
+        {
+            var blink = IsInvulnerable && Mathf.FloorToInt(Time.unscaledTime * 16f) % 2 == 0;
+            SetVisualAlpha(blink ? 0.35f : 1f);
+        }
+
+        private void SetVisualAlpha(float alpha)
+        {
+            if (_visualRenderers == null) return;
+            foreach (var renderer in _visualRenderers)
+            {
+                if (renderer == null) continue;
+                var color = renderer.color;
+                color.a = alpha;
+                renderer.color = color;
+            }
         }
 
         private void OnCollisionStay2D(Collision2D collision)

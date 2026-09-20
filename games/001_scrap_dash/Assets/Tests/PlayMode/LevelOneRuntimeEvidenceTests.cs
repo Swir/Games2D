@@ -525,6 +525,57 @@ namespace ScrapDash.Tests
         }
 
         [UnityTest]
+        public IEnumerator PhysicalEnemyHitsRespectRecoveryGraceAndRebootAtTheCheckpoint()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            var enemy = Object.FindFirstObjectByType<PatrolEnemy>();
+            var game = Object.FindFirstObjectByType<ScrapDashGame>();
+            yield return null;
+
+            var enemyPosition = (Vector2)enemy.transform.position;
+            var safePoint = new Vector2(8f, 0.25f);
+            game.ActivateCheckpoint(safePoint);
+            enemy.Configure(enemyPosition.x, enemyPosition.x, 0f);
+
+            player.transform.position = enemyPosition;
+            Physics2D.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            Assert.That(game.Hits, Is.EqualTo(1));
+            Assert.That(game.Integrity, Is.EqualTo(2));
+            Assert.That(player.IsInvulnerable, Is.True, "A hit must provide a short recovery window.");
+
+            player.transform.position = enemyPosition + Vector2.left * 2f;
+            Physics2D.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            player.transform.position = enemyPosition;
+            Physics2D.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            Assert.That(game.Hits, Is.EqualTo(1), "Immediate repeat contact must not drain the full core.");
+
+            for (var acceptedHit = 2; acceptedHit <= ScrapDashGame.MaxIntegrityValue; acceptedHit++)
+            {
+                player.transform.position = enemyPosition + Vector2.left * 2f;
+                Physics2D.SyncTransforms();
+                yield return new WaitForFixedUpdate();
+                yield return new WaitForSecondsRealtime(0.85f);
+                player.transform.position = enemyPosition;
+                Physics2D.SyncTransforms();
+                yield return new WaitForFixedUpdate();
+                yield return null;
+                Assert.That(game.Hits, Is.EqualTo(acceptedHit));
+            }
+
+            Assert.That(game.Deaths, Is.EqualTo(1), "Three accepted hits must trigger one reboot.");
+            Assert.That(game.Integrity, Is.EqualTo(ScrapDashGame.MaxIntegrityValue));
+            Assert.That((Vector2)player.transform.position, Is.EqualTo(safePoint));
+            Assert.That(player.Body.linearVelocity, Is.EqualTo(Vector2.zero));
+            Assert.That(player.IsInvulnerable, Is.True, "Respawn must include safe recovery grace.");
+        }
+
+        [UnityTest]
         public IEnumerator FollowCameraKeepsTheCriticalRouteReadableAndSnapsAfterRespawn()
         {
             _root = ScrapDashBootstrap.BuildLevelForTests();
