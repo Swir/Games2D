@@ -45,7 +45,7 @@ jobs:
           for name in ("progress-card.svg", "progress-mini.svg", "progress-template.svg"):
               ET.parse(root / "assets/readme" / name)
           playmode = "\n".join(path.read_text(encoding="utf-8") for path in (root / "Assets/Tests/PlayMode").glob("*.cs"))
-          assert playmode.count("[UnityTest]") >= 16
+          assert playmode.count("[UnityTest]") >= 19
           PY
 
   tests:

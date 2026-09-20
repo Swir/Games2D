@@ -39,11 +39,16 @@ namespace ScrapDash
         private MovingPlatform _supportPlatform;
         private TrailRenderer _dashTrail;
         private bool _airDashReady = true;
+        private bool _jumpPressedWhileAirborne;
 
         public bool IsGrounded => _groundContacts.Count > 0;
         public bool IsDashing => _dashRemaining > 0f;
         public bool AirDashReady => IsGrounded || _airDashReady;
         public Rigidbody2D Body => _body;
+        public int JumpCount { get; private set; }
+        public int BufferedJumpCount { get; private set; }
+        public int JumpCutCount { get; private set; }
+        public bool LastJumpUsedCoyoteTime { get; private set; }
 
         private void Awake()
         {
@@ -120,7 +125,11 @@ namespace ScrapDash
                 }
             }
 
-            if (_jump.WasPressedThisFrame()) _jumpBufferRemaining = jumpBufferTime;
+            if (_jump.WasPressedThisFrame())
+            {
+                _jumpBufferRemaining = jumpBufferTime;
+                _jumpPressedWhileAirborne = !IsGrounded;
+            }
             else _jumpBufferRemaining = Mathf.Max(0f, _jumpBufferRemaining - Time.deltaTime);
 
             if (IsGrounded)
@@ -146,6 +155,7 @@ namespace ScrapDash
             if (_jump.WasReleasedThisFrame() && _body.linearVelocity.y > 0f && !IsDashing)
             {
                 _body.linearVelocity = new Vector2(_body.linearVelocity.x, _body.linearVelocity.y * 0.5f);
+                JumpCutCount++;
             }
 
             if (transform.position.y < -7f)
@@ -167,8 +177,12 @@ namespace ScrapDash
 
             if (_jumpBufferRemaining > 0f && _coyoteRemaining > 0f)
             {
+                LastJumpUsedCoyoteTime = !IsGrounded;
+                if (_jumpPressedWhileAirborne && IsGrounded) BufferedJumpCount++;
+                JumpCount++;
                 _jumpBufferRemaining = 0f;
                 _coyoteRemaining = 0f;
+                _jumpPressedWhileAirborne = false;
                 _body.linearVelocity = new Vector2(
                     _body.linearVelocity.x,
                     jumpVelocity + Mathf.Max(0f, _supportVelocity.y)
@@ -249,6 +263,11 @@ namespace ScrapDash
             _groundContacts.Clear();
             _supportPlatform = null;
             _supportVelocity = Vector2.zero;
+            _moveX = 0f;
+            _jumpHeld = false;
+            _jumpBufferRemaining = 0f;
+            _coyoteRemaining = 0f;
+            _jumpPressedWhileAirborne = false;
             _invulnerableUntil = Time.unscaledTime + 0.65f;
             _body.linearVelocity = Vector2.zero;
             _body.angularVelocity = 0f;

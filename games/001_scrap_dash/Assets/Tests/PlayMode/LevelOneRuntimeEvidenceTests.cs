@@ -49,6 +49,86 @@ namespace ScrapDash.Tests
         }
 
         [UnityTest]
+        public IEnumerator ReleasingJumpEarlyCutsUpwardVelocity()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            _keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return WaitForGrounding(player);
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.Space));
+            InputSystem.Update();
+            player.SendMessage("Update");
+            player.SendMessage("FixedUpdate");
+            var heldVelocity = player.Body.linearVelocity.y;
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState());
+            InputSystem.Update();
+            player.SendMessage("Update");
+
+            Assert.That(player.JumpCount, Is.EqualTo(1));
+            Assert.That(player.JumpCutCount, Is.EqualTo(1));
+            Assert.That(player.Body.linearVelocity.y, Is.GreaterThan(0f));
+            Assert.That(player.Body.linearVelocity.y, Is.LessThanOrEqualTo(heldVelocity * 0.55f));
+        }
+
+        [UnityTest]
+        public IEnumerator CoyoteTimeAcceptsJumpJustAfterLeavingTheDeck()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            _keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return WaitForGrounding(player);
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState());
+            InputSystem.Update();
+            player.SendMessage("Update");
+            player.Bounce(0.8f);
+            Assert.That(player.IsGrounded, Is.False);
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.Space));
+            InputSystem.Update();
+            player.SendMessage("Update");
+            player.SendMessage("FixedUpdate");
+
+            Assert.That(player.JumpCount, Is.EqualTo(1));
+            Assert.That(player.LastJumpUsedCoyoteTime, Is.True);
+            Assert.That(player.Body.linearVelocity.y, Is.GreaterThan(8f));
+        }
+
+        [UnityTest]
+        public IEnumerator BufferedJumpFiresWhenThePlayerTouchesDown()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            _keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return WaitForGrounding(player);
+
+            player.Bounce(4f);
+            for (var i = 0; i < 8; i++)
+            {
+                yield return new WaitForFixedUpdate();
+                yield return null;
+            }
+
+            Assert.That(player.IsGrounded, Is.False);
+            Assert.That(player.JumpCount, Is.Zero, "The bounce itself is not a player jump.");
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.Space));
+            InputSystem.Update();
+            player.SendMessage("Update");
+
+            for (var i = 0; i < 10 && player.BufferedJumpCount == 0; i++)
+            {
+                yield return new WaitForFixedUpdate();
+                yield return null;
+            }
+
+            Assert.That(player.BufferedJumpCount, Is.EqualTo(1), "A pre-landing press must fire on touchdown.");
+            Assert.That(player.JumpCount, Is.EqualTo(1));
+            Assert.That(player.Body.linearVelocity.y, Is.GreaterThan(0f));
+        }
+
+        [UnityTest]
         public IEnumerator GamepadMoveAndDashDriveThePlayerController()
         {
             _root = ScrapDashBootstrap.BuildLevelForTests();
