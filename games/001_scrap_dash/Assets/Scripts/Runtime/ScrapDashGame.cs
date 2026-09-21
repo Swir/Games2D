@@ -47,6 +47,11 @@ namespace ScrapDash
         public bool Won => _won;
         public bool Paused => _paused;
         public bool BlocksPlayerControl => _paused || _won;
+        public string DashHudText => _player == null
+            ? "DASH --"
+            : _player.IsDashing
+                ? "DASH BURST"
+                : _player.AirDashReady ? "DASH READY" : "DASH SPENT";
         public bool CenterPanelVisible => _paused || _won;
         public string CenterPanelTitle => _won ? $"LEVEL 1 COMPLETE!  GRADE {GetRunGrade()}" : _paused ? "PAUSED" : string.Empty;
         public string CenterPanelSubtitle => _won
@@ -295,7 +300,9 @@ namespace ScrapDash
             );
             GUI.Label(
                 new Rect(34, 91, 390, 28),
-                _bestSeconds > 0f ? $"Best: {FormatTime(_bestSeconds)}  •  Hits: {_hits}" : $"Best: --:--.--  •  Hits: {_hits}",
+                _bestSeconds > 0f
+                    ? $"Best: {FormatTime(_bestSeconds)}  •  Hits: {_hits}  •  {DashHudText}"
+                    : $"Best: --:--.--  •  Hits: {_hits}  •  {DashHudText}",
                 new GUIStyle(hudStyle) { fontSize = Mathf.Max(14, hudStyle.fontSize - 7) }
             );
             GUI.Label(

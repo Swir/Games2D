@@ -153,6 +153,42 @@ namespace ScrapDash.Tests
         }
 
         [UnityTest]
+        public IEnumerator KeyboardRunJumpAndDashCrossTheFirstElectricGap()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            var game = Object.FindFirstObjectByType<ScrapDashGame>();
+            _keyboard = InputSystem.AddDevice<Keyboard>();
+
+            player.transform.position = new Vector2(-5.35f, -1.1f);
+            player.ResetMotion();
+            Physics2D.SyncTransforms();
+            yield return WaitForGrounding(player, 40);
+            Assert.That(player.IsGrounded, Is.True);
+            Assert.That(game.DashHudText, Is.EqualTo("DASH READY"));
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.D, Key.Space));
+            InputSystem.Update();
+            player.SendMessage("Update");
+            for (var i = 0; i < 4; i++) yield return new WaitForFixedUpdate();
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.D, Key.LeftShift));
+            InputSystem.Update();
+            player.SendMessage("Update");
+            Assert.That(player.IsDashing, Is.True);
+            Assert.That(game.DashHudText, Is.EqualTo("DASH BURST"));
+
+            for (var i = 0; i < 18; i++) yield return new WaitForFixedUpdate();
+            yield return null;
+
+            Assert.That(player.transform.position.x, Is.GreaterThan(-3.05f),
+                "Real keyboard movement must carry the player across ElectricPitA.");
+            Assert.That(game.Deaths, Is.Zero, "The intended jump-dash route must clear the hazard.");
+            Assert.That(player.DashCount, Is.EqualTo(1));
+            Assert.That(player.TotalDashDistance, Is.GreaterThan(2.5f));
+        }
+
+        [UnityTest]
         public IEnumerator GroundDashRunsItsFullBurstAndRestoresNormalPhysics()
         {
             _root = ScrapDashBootstrap.BuildLevelForTests();
