@@ -24,6 +24,7 @@ The first playable level is **Closing Time Circuit**. The source currently targe
 - variable jump, coyote time and jump buffering;
 - horizontal dash;
 - rail-aligned runaway-cart platform with a pulsing beacon, measurable route progress and safe endpoint pauses;
+- self-centering Magnet Lift that visibly energizes while carrying the player;
 - pulsing electric hazards, fatal-impact feedback and safe checkpoint/fall recovery;
 - a warning-eye patrol enemy that accelerates into a short-range charge;
 - stomp attack that recycles the patrol enemy and bounces the player;

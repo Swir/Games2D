@@ -496,15 +496,20 @@ namespace ScrapDash.Tests
             Assert.That(mover.IsWaitingAtEndpoint, Is.True, "The endpoint dwell gives the player a safe boarding window.");
             Assert.That(mover.Velocity, Is.EqualTo(Vector2.zero));
 
-            player.transform.position = magnet.transform.position;
+            player.transform.position = (Vector2)magnet.transform.position + new Vector2(0.65f, 0f);
             player.Body.linearVelocity = Vector2.zero;
             Physics2D.SyncTransforms();
+            var horizontalDistanceBeforeLift = Mathf.Abs(player.transform.position.x - magnet.transform.position.x);
             for (var i = 0; i < 8; i++) yield return new WaitForFixedUpdate();
 
             Assert.That(player.Body.linearVelocity.y, Is.GreaterThan(0f), "Magnet Lift must overcome gravity.");
+            Assert.That(Mathf.Abs(player.transform.position.x - magnet.transform.position.x),
+                Is.LessThan(horizontalDistanceBeforeLift), "Magnet Lift must guide an off-centre rider toward its safe lane.");
             Assert.That(magnet.IsEnergized, Is.True, "Magnet Lift must visibly energize while carrying the player.");
             Assert.That(magnet.ActiveRiders, Is.EqualTo(1));
             Assert.That(magnet.Force.y, Is.GreaterThan(0f));
+            Assert.That(magnet.LiftApplicationCount, Is.GreaterThan(0));
+            Assert.That(magnet.LastCenteringForce, Is.LessThan(0f));
 
         }
 

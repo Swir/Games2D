@@ -255,13 +255,19 @@ namespace ScrapDash
     public sealed class MagnetZone : MonoBehaviour
     {
         [SerializeField] private Vector2 force = new(0f, 36f);
+        [SerializeField] private float centeringForce = 18f;
+        [SerializeField] private float captureDeadZone = 0.12f;
         private SpriteRenderer _renderer;
         private Color _baseColor;
-        private int _activeRiders;
+        private PlayerController _activeRider;
+        private int _liftApplicationCount;
+        private float _lastCenteringForce;
 
         public Vector2 Force => force;
-        public int ActiveRiders => _activeRiders;
-        public bool IsEnergized => _activeRiders > 0;
+        public int ActiveRiders => _activeRider == null ? 0 : 1;
+        public bool IsEnergized => _activeRider != null;
+        public int LiftApplicationCount => _liftApplicationCount;
+        public float LastCenteringForce => _lastCenteringForce;
 
         private void Awake()
         {
@@ -286,18 +292,32 @@ namespace ScrapDash
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (other.GetComponent<PlayerController>() != null) _activeRiders++;
+            var player = other.GetComponent<PlayerController>();
+            if (player != null) _activeRider = player;
         }
 
         private void OnTriggerStay2D(Collider2D other)
         {
             var player = other.GetComponent<PlayerController>();
-            if (player != null) player.ApplyMagnet(force);
+            if (player == null) return;
+
+            _activeRider = player;
+            var horizontalOffset = transform.position.x - player.transform.position.x;
+            _lastCenteringForce = Mathf.Abs(horizontalOffset) <= captureDeadZone
+                ? 0f
+                : Mathf.Clamp(horizontalOffset * centeringForce, -centeringForce, centeringForce);
+            player.ApplyMagnet(new Vector2(force.x + _lastCenteringForce, force.y));
+            _liftApplicationCount++;
         }
 
         private void OnTriggerExit2D(Collider2D other)
         {
-            if (other.GetComponent<PlayerController>() != null) _activeRiders = Mathf.Max(0, _activeRiders - 1);
+            var player = other.GetComponent<PlayerController>();
+            if (player != null && player == _activeRider)
+            {
+                _activeRider = null;
+                _lastCenteringForce = 0f;
+            }
         }
     }
 
