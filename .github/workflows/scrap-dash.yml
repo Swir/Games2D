@@ -62,6 +62,84 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Normalize Unity ULF secret
+        shell: bash
+        env:
+          RAW_UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64
+          import json
+          import os
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          raw = os.environ.get("RAW_UNITY_LICENSE", "")
+          if not raw:
+              raise SystemExit("UNITY_LICENSE is empty.")
+
+          def clean(value: str) -> str:
+              value = value.replace("\x00", "").lstrip("\ufeff").strip()
+              for prefix in ("UNITY_LICENSE=", "UNITY_LICENSE:"):
+                  if value.startswith(prefix):
+                      value = value[len(prefix):].strip()
+              if len(value) >= 2 and value[0] == value[-1] == '"':
+                  try:
+                      decoded = json.loads(value)
+                      if isinstance(decoded, str):
+                          value = decoded
+                  except Exception:
+                      value = value[1:-1]
+              if "\n" not in value and "\\n" in value:
+                  value = value.replace("\\r\\n", "\n").replace("\\n", "\n").replace("\\r", "\n")
+              return value.replace("\r\n", "\n").replace("\r", "\n").lstrip("\ufeff").strip()
+
+          candidates = [clean(raw)]
+          compact = "".join(raw.split())
+          try:
+              decoded_bytes = base64.b64decode(compact, validate=True)
+              for enc in ("utf-8-sig", "utf-16", "utf-16-le", "utf-16-be"):
+                  try:
+                      candidates.append(clean(decoded_bytes.decode(enc)))
+                      break
+                  except UnicodeDecodeError:
+                      pass
+          except Exception:
+              pass
+
+          license_text = None
+          for candidate in candidates:
+              try:
+                  root = ET.fromstring(candidate)
+                  if root.tag.lower().endswith("root") or root.find(".//License") is not None:
+                      license_text = candidate
+                      break
+              except ET.ParseError:
+                  continue
+
+          if license_text is None:
+              raise SystemExit(
+                  "UNITY_LICENSE is present, but it is not valid ULF XML after BOM/CRLF/"
+                  "quoted/escaped/Base64 normalization. Re-copy the contents of "
+                  "C:\\ProgramData\\Unity\\Unity_lic.ulf into the UNITY_LICENSE secret."
+              )
+
+          # Mask every non-empty line before exporting the normalized value.
+          for line in license_text.splitlines():
+              if line.strip():
+                  escaped = line.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+                  print(f"::add-mask::{escaped}")
+
+          env_file = Path(os.environ["GITHUB_ENV"])
+          with env_file.open("a", encoding="utf-8", newline="\n") as fh:
+              fh.write("UNITY_LICENSE<<__UNITY_LICENSE_EOF__\n")
+              fh.write(license_text)
+              fh.write("\n__UNITY_LICENSE_EOF__\n")
+
+          print("UNITY_LICENSE: valid ULF XML after safe normalization.")
+          PY
+
       - name: Cache Unity Library
         uses: actions/cache@v4
         with:
@@ -74,7 +152,6 @@ jobs:
         id: unityTests
         uses: game-ci/unity-test-runner@v4.4.0
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
@@ -98,6 +175,84 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Normalize Unity ULF secret
+        shell: bash
+        env:
+          RAW_UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64
+          import json
+          import os
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          raw = os.environ.get("RAW_UNITY_LICENSE", "")
+          if not raw:
+              raise SystemExit("UNITY_LICENSE is empty.")
+
+          def clean(value: str) -> str:
+              value = value.replace("\x00", "").lstrip("\ufeff").strip()
+              for prefix in ("UNITY_LICENSE=", "UNITY_LICENSE:"):
+                  if value.startswith(prefix):
+                      value = value[len(prefix):].strip()
+              if len(value) >= 2 and value[0] == value[-1] == '"':
+                  try:
+                      decoded = json.loads(value)
+                      if isinstance(decoded, str):
+                          value = decoded
+                  except Exception:
+                      value = value[1:-1]
+              if "\n" not in value and "\\n" in value:
+                  value = value.replace("\\r\\n", "\n").replace("\\n", "\n").replace("\\r", "\n")
+              return value.replace("\r\n", "\n").replace("\r", "\n").lstrip("\ufeff").strip()
+
+          candidates = [clean(raw)]
+          compact = "".join(raw.split())
+          try:
+              decoded_bytes = base64.b64decode(compact, validate=True)
+              for enc in ("utf-8-sig", "utf-16", "utf-16-le", "utf-16-be"):
+                  try:
+                      candidates.append(clean(decoded_bytes.decode(enc)))
+                      break
+                  except UnicodeDecodeError:
+                      pass
+          except Exception:
+              pass
+
+          license_text = None
+          for candidate in candidates:
+              try:
+                  root = ET.fromstring(candidate)
+                  if root.tag.lower().endswith("root") or root.find(".//License") is not None:
+                      license_text = candidate
+                      break
+              except ET.ParseError:
+                  continue
+
+          if license_text is None:
+              raise SystemExit(
+                  "UNITY_LICENSE is present, but it is not valid ULF XML after BOM/CRLF/"
+                  "quoted/escaped/Base64 normalization. Re-copy the contents of "
+                  "C:\\ProgramData\\Unity\\Unity_lic.ulf into the UNITY_LICENSE secret."
+              )
+
+          # Mask every non-empty line before exporting the normalized value.
+          for line in license_text.splitlines():
+              if line.strip():
+                  escaped = line.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+                  print(f"::add-mask::{escaped}")
+
+          env_file = Path(os.environ["GITHUB_ENV"])
+          with env_file.open("a", encoding="utf-8", newline="\n") as fh:
+              fh.write("UNITY_LICENSE<<__UNITY_LICENSE_EOF__\n")
+              fh.write(license_text)
+              fh.write("\n__UNITY_LICENSE_EOF__\n")
+
+          print("UNITY_LICENSE: valid ULF XML after safe normalization.")
+          PY
+
       - name: Cache Unity Library
         uses: actions/cache@v4
         with:
@@ -109,7 +264,6 @@ jobs:
       - name: Build Windows x64
         uses: game-ci/unity-builder@v6.0.0
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
