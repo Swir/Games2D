@@ -138,6 +138,10 @@ namespace ScrapDash
             var landingEffector = magnetLanding.AddComponent<PlatformEffector2D>();
             landingEffector.useOneWay = true;
             landingEffector.surfaceArc = 155f;
+
+            // Break the tall drop out of the Magnet Lift into readable, safe landing beats.
+            CreatePlatform(parent, "ExitStepHigh", new Vector2(20.55f, 0.75f), new Vector2(1.15f, 0.35f));
+            CreatePlatform(parent, "ExitStepLow", new Vector2(21.15f, -0.65f), new Vector2(1.15f, 0.35f));
             CreatePlatform(parent, "FinishDeck", new Vector2(23.5f, -2.5f), new Vector2(8f, 1f));
 
             var mover = CreatePlatform(parent, "RunawayCart", new Vector2(3.2f, -1.4f), new Vector2(2.4f, 0.45f), true);
@@ -207,6 +211,7 @@ namespace ScrapDash
             CreateRouteChevrons(parent, "DashRoute", new Vector2(-4.1f, -0.65f), Vector2.right, Cyan);
             CreateRouteChevrons(parent, "CartRoute", new Vector2(3.4f, 0.35f), Vector2.right, Yellow);
             CreateRouteChevrons(parent, "MagnetRoute", new Vector2(15.55f, -0.75f), Vector2.up, Cyan);
+            CreateRouteChevrons(parent, "ExitRoute", new Vector2(20.55f, 1.45f), Vector2.down, Yellow);
             CreateRouteChevrons(parent, "FinishRoute", new Vector2(23.35f, -0.4f), Vector2.right, Yellow);
         }
 
@@ -215,7 +220,8 @@ namespace ScrapDash
             var route = new GameObject(name);
             route.transform.SetParent(parent, false);
             route.transform.position = position;
-            route.transform.rotation = Quaternion.Euler(0f, 0f, direction == Vector2.up ? 90f : 0f);
+            var angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            route.transform.rotation = Quaternion.Euler(0f, 0f, angle);
             route.AddComponent<CorePulse>();
 
             for (var i = 0; i < 3; i++)

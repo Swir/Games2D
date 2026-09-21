@@ -669,6 +669,47 @@ namespace ScrapDash.Tests
         }
 
         [UnityTest]
+        public IEnumerator MagnetLandingHasASafePhysicalDescentToTheFinishDeck()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            var playerCollider = player.GetComponent<CapsuleCollider2D>();
+            var highStep = GameObject.Find("ExitStepHigh");
+            var lowStep = GameObject.Find("ExitStepLow");
+            var finishDeck = GameObject.Find("FinishDeck");
+            yield return null;
+
+            Assert.That(highStep, Is.Not.Null);
+            Assert.That(lowStep, Is.Not.Null);
+            Assert.That(finishDeck, Is.Not.Null);
+            Assert.That(GameObject.Find("ExitRoute"), Is.Not.Null, "The descent must have a visible route marker.");
+
+            player.transform.position = new Vector2(20.8f, 2f);
+            player.ResetMotion();
+            player.Body.linearVelocity = Vector2.down * 3f;
+            Physics2D.SyncTransforms();
+            yield return WaitForGrounding(player, 80);
+            Assert.That(player.IsGrounded, Is.True, "The upper exit step must catch the player.");
+            Assert.That(player.transform.position.y, Is.EqualTo(ExpectedStandingY(highStep, playerCollider)).Within(0.18f));
+
+            player.transform.position = new Vector2(21.65f, 0.35f);
+            player.ResetMotion();
+            player.Body.linearVelocity = Vector2.down * 3f;
+            Physics2D.SyncTransforms();
+            yield return WaitForGrounding(player, 80);
+            Assert.That(player.IsGrounded, Is.True, "The lower exit step must catch the player.");
+            Assert.That(player.transform.position.y, Is.EqualTo(ExpectedStandingY(lowStep, playerCollider)).Within(0.18f));
+
+            player.transform.position = new Vector2(22.25f, -0.35f);
+            player.ResetMotion();
+            player.Body.linearVelocity = Vector2.down * 3f;
+            Physics2D.SyncTransforms();
+            yield return WaitForGrounding(player, 80);
+            Assert.That(player.IsGrounded, Is.True, "The descent must end safely on the finish deck.");
+            Assert.That(player.transform.position.y, Is.EqualTo(ExpectedStandingY(finishDeck, playerCollider)).Within(0.18f));
+        }
+
+        [UnityTest]
         public IEnumerator FollowCameraKeepsTheCriticalRouteReadableAndSnapsAfterRespawn()
         {
             _root = ScrapDashBootstrap.BuildLevelForTests();
@@ -723,9 +764,18 @@ namespace ScrapDash.Tests
             Assert.That(follow.IsWithinBounds, Is.True, "Respawn camera must return to a valid composition.");
         }
 
-        private static IEnumerator WaitForGrounding(PlayerController player)
+        private static float ExpectedStandingY(GameObject platform, CapsuleCollider2D playerCollider)
         {
-            for (var i = 0; i < 20 && !player.IsGrounded; i++)
+            var platformCollider = platform.GetComponent<BoxCollider2D>();
+            var platformTop = platform.transform.position.y
+                + platform.transform.lossyScale.y * platformCollider.size.y * 0.5f;
+            var playerBottomOffset = playerCollider.offset.y - playerCollider.size.y * 0.5f;
+            return platformTop - playerBottomOffset;
+        }
+
+        private static IEnumerator WaitForGrounding(PlayerController player, int fixedFrameLimit = 20)
+        {
+            for (var i = 0; i < fixedFrameLimit && !player.IsGrounded; i++)
             {
                 yield return new WaitForFixedUpdate();
             }
