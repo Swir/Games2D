@@ -419,12 +419,17 @@ namespace ScrapDash
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (other.GetComponent<PlayerController>() != null)
+            var player = other.GetComponent<PlayerController>();
+            if (player == null) return;
+
+            EntryAttempts++;
+            if (!IsUnlocked)
             {
-                EntryAttempts++;
-                if (!IsUnlocked) LockedAttempts++;
-                ScrapDashGame.Instance?.TryFinish();
+                LockedAttempts++;
+                player.RejectFromGate(transform.position);
             }
+
+            ScrapDashGame.Instance?.TryFinish();
         }
     }
 }

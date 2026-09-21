@@ -251,6 +251,13 @@ namespace ScrapDash
             _body.linearVelocity = velocity;
         }
 
+        public void RejectFromGate(Vector2 gatePosition)
+        {
+            EndDash();
+            var away = transform.position.x <= gatePosition.x ? -1f : 1f;
+            _body.linearVelocity = new Vector2(away * 7f, Mathf.Max(_body.linearVelocity.y, 5f));
+        }
+
         public void TakeHit(Vector2 source)
         {
             if (IsInvulnerable) return;

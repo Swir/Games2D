@@ -286,6 +286,9 @@ namespace ScrapDash.Tests
             yield return new WaitForFixedUpdate();
             Assert.That(game.Won, Is.False, "The finish must stay locked before the scrap objective.");
             Assert.That(finish.LockedAttempts, Is.EqualTo(1));
+            Assert.That(player.Body.linearVelocity.x, Is.LessThan(0f), "A locked gate must push the player back into the level.");
+            Assert.That(player.Body.linearVelocity.y, Is.GreaterThan(0f), "Gate rejection must clear the trigger safely.");
+            Assert.That(game.Hits, Is.Zero, "Gate rejection is guidance, not combat damage.");
 
             player.transform.position = checkpoint.transform.position;
             player.Body.linearVelocity = Vector2.zero;

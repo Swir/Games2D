@@ -34,7 +34,7 @@ The first playable level is **Closing Time Circuit**. The source currently targe
 - velocity-aware camera look-ahead, bounded framing and instant respawn recentering;
 - pulsing cyan/yellow route chevrons for gaps, the cart, Magnet Lift and finish;
 - original procedural sound effects, collectible/stomp/checkpoint sparks and a cyan dash trail;
-- finish gate with a minimum scrap objective;
+- finish gate that physically rejects the player until the scrap objective is charged;
 - run timer, death counter, persistent best time and end-of-level grade;
 - HUD, pause, restart, fullscreen/windowed toggle, resolution presets and persistent master volume.
 
