@@ -182,22 +182,38 @@ namespace ScrapDash
         [SerializeField] private Vector2 pointA;
         [SerializeField] private Vector2 pointB;
         [SerializeField] private float speed = 2f;
+        [SerializeField] private float endpointWait = 0.55f;
         private Rigidbody2D _body;
         private float _distance;
         private float _travel;
+        private float _waitRemaining;
+        private bool _travellingForward = true;
         private Vector2 _velocity;
         private float _totalDistanceMoved;
+        private int _endpointPauseCount;
 
         public Vector2 Velocity => _velocity;
         public float TotalDistanceMoved => _totalDistanceMoved;
-        public float NormalizedProgress => _distance <= 0.001f ? 0f : Mathf.PingPong(_travel, _distance) / _distance;
+        public float NormalizedProgress => _distance <= 0.001f ? 0f : _travel / _distance;
+        public bool IsWaitingAtEndpoint => _waitRemaining > 0f;
+        public int EndpointPauseCount => _endpointPauseCount;
 
         public void Configure(Vector2 a, Vector2 b, float moveSpeed)
         {
             pointA = a;
             pointB = b;
-            speed = moveSpeed;
+            speed = Mathf.Max(0.1f, moveSpeed);
             _distance = Vector2.Distance(pointA, pointB);
+            _travel = 0f;
+            _waitRemaining = endpointWait;
+            _travellingForward = true;
+            _velocity = Vector2.zero;
+
+            if (_body != null)
+            {
+                _body.position = pointA;
+                transform.position = pointA;
+            }
         }
 
         private void Awake()
@@ -211,13 +227,28 @@ namespace ScrapDash
         private void FixedUpdate()
         {
             if (_distance <= 0.001f) return;
-            _travel += speed * Time.fixedDeltaTime;
-            var loop = Mathf.PingPong(_travel, _distance);
-            var t = loop / _distance;
+            if (_waitRemaining > 0f)
+            {
+                _waitRemaining = Mathf.Max(0f, _waitRemaining - Time.fixedDeltaTime);
+                _velocity = Vector2.zero;
+                return;
+            }
+
+            var direction = _travellingForward ? 1f : -1f;
+            _travel = Mathf.Clamp(_travel + direction * speed * Time.fixedDeltaTime, 0f, _distance);
+            var t = _travel / _distance;
             var target = Vector2.Lerp(pointA, pointB, t);
             _velocity = (target - _body.position) / Time.fixedDeltaTime;
             _totalDistanceMoved += Vector2.Distance(_body.position, target);
             _body.MovePosition(target);
+
+            if ((_travellingForward && _travel >= _distance)
+                || (!_travellingForward && _travel <= 0f))
+            {
+                _travellingForward = !_travellingForward;
+                _waitRemaining = endpointWait;
+                _endpointPauseCount++;
+            }
         }
     }
 

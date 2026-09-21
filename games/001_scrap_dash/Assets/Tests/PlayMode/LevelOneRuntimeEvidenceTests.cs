@@ -479,11 +479,22 @@ namespace ScrapDash.Tests
             var magnet = Object.FindFirstObjectByType<MagnetZone>();
             yield return null;
 
+            Assert.That((Vector2)mover.transform.position, Is.EqualTo(new Vector2(2.4f, -1.4f)),
+                "The cart must begin exactly on its authored rail instead of snapping on the first physics tick.");
             var moverStart = (Vector2)mover.transform.position;
-            for (var i = 0; i < 8; i++) yield return new WaitForFixedUpdate();
+            for (var i = 0; i < 34; i++) yield return new WaitForFixedUpdate();
             Assert.That(Vector2.Distance(moverStart, mover.transform.position), Is.GreaterThan(0.05f));
             Assert.That(mover.TotalDistanceMoved, Is.GreaterThan(0.05f));
             Assert.That(mover.NormalizedProgress, Is.InRange(0f, 1f));
+
+            for (var i = 0; i < 80 && mover.EndpointPauseCount == 0; i++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.That(mover.EndpointPauseCount, Is.EqualTo(1), "The cart must stop at the far platform once per trip.");
+            Assert.That(mover.IsWaitingAtEndpoint, Is.True, "The endpoint dwell gives the player a safe boarding window.");
+            Assert.That(mover.Velocity, Is.EqualTo(Vector2.zero));
 
             player.transform.position = magnet.transform.position;
             player.Body.linearVelocity = Vector2.zero;
