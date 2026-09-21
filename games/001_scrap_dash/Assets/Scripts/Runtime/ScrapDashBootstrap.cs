@@ -132,7 +132,12 @@ namespace ScrapDash
             CreatePlatform(parent, "TicketBoothDeck", new Vector2(-1.1f, -2.5f), new Vector2(4.2f, 1f));
             CreatePlatform(parent, "MidwayDeck", new Vector2(8f, -2.5f), new Vector2(5f, 1f));
             CreatePlatform(parent, "ArcadeDeck", new Vector2(13.3f, -2.5f), new Vector2(5.4f, 1f));
-            CreatePlatform(parent, "MagnetLanding", new Vector2(18.2f, 2.25f), new Vector2(4f, 0.65f));
+            var magnetLanding = CreatePlatform(parent, "MagnetLanding", new Vector2(18.2f, 2.25f), new Vector2(4f, 0.65f));
+            var landingCollider = magnetLanding.GetComponent<BoxCollider2D>();
+            landingCollider.usedByEffector = true;
+            var landingEffector = magnetLanding.AddComponent<PlatformEffector2D>();
+            landingEffector.useOneWay = true;
+            landingEffector.surfaceArc = 155f;
             CreatePlatform(parent, "FinishDeck", new Vector2(23.5f, -2.5f), new Vector2(8f, 1f));
 
             var mover = CreatePlatform(parent, "RunawayCart", new Vector2(3.2f, -1.4f), new Vector2(2.4f, 0.45f), true);

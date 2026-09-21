@@ -514,6 +514,38 @@ namespace ScrapDash.Tests
             Assert.That(magnet.LiftApplicationCount, Is.GreaterThan(0));
             Assert.That(magnet.LastCenteringForce, Is.LessThan(0f));
 
+            var landing = GameObject.Find("MagnetLanding");
+            var landingCollider = landing.GetComponent<BoxCollider2D>();
+            var landingEffector = landing.GetComponent<PlatformEffector2D>();
+            Assert.That(landingEffector, Is.Not.Null, "Magnet landing must allow the lift to pass through from below.");
+            Assert.That(landingCollider.usedByEffector, Is.True);
+            Assert.That(landingEffector.useOneWay, Is.True);
+
+            var landingTop = landing.transform.position.y
+                + landing.transform.lossyScale.y * landingCollider.size.y * 0.5f;
+            var liftedAboveLanding = false;
+            for (var i = 0; i < 180; i++)
+            {
+                yield return new WaitForFixedUpdate();
+                if (player.transform.position.y > landingTop + 0.25f)
+                {
+                    liftedAboveLanding = true;
+                    break;
+                }
+            }
+
+            Assert.That(liftedAboveLanding, Is.True, "Magnet Lift must carry the player through the one-way landing.");
+
+            player.transform.position = new Vector2(landing.transform.position.x + 1.45f, landingTop + 1.8f);
+            player.Body.linearVelocity = Vector2.down * 3f;
+            Physics2D.SyncTransforms();
+            for (var i = 0; i < 80 && !player.IsGrounded; i++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.That(player.IsGrounded, Is.True, "The same landing must catch the player safely from above.");
+            Assert.That(player.transform.position.y, Is.GreaterThan(landing.transform.position.y));
         }
 
         [UnityTest]
