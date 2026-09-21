@@ -32,6 +32,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 games/001_scrap_dash/tools/generate_progress.py --check
+          python3 games/001_scrap_dash/tools/prepare_unity_license.py --self-test
           python3 - <<'PY'
           import json
           import xml.etree.ElementTree as ET
@@ -62,6 +63,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Recover Unity ULF formatting
+        shell: bash
+        env:
+          RAW_UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: python3 games/001_scrap_dash/tools/prepare_unity_license.py
+
       - name: Cache Unity Library
         uses: actions/cache@v4
         with:
@@ -74,7 +81,6 @@ jobs:
         id: unityTests
         uses: game-ci/unity-test-runner@v4.4.0
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
@@ -98,6 +104,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Recover Unity ULF formatting
+        shell: bash
+        env:
+          RAW_UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: python3 games/001_scrap_dash/tools/prepare_unity_license.py
+
       - name: Cache Unity Library
         uses: actions/cache@v4
         with:
@@ -109,7 +121,6 @@ jobs:
       - name: Build Windows x64
         uses: game-ci/unity-builder@v6.0.0
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
