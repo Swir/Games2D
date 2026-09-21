@@ -622,6 +622,73 @@ namespace ScrapDash.Tests
         }
 
         [UnityTest]
+        public IEnumerator CartRideFlowsIntoCheckpointSpringAndMagnetLift()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            var mover = Object.FindFirstObjectByType<MovingPlatform>();
+            var checkpoint = Object.FindFirstObjectByType<Checkpoint>();
+            var magnet = Object.FindFirstObjectByType<MagnetZone>();
+            var platformCollider = mover.GetComponent<BoxCollider2D>();
+            var playerCollider = player.GetComponent<CapsuleCollider2D>();
+            _keyboard = InputSystem.AddDevice<Keyboard>();
+            Object.FindFirstObjectByType<PatrolEnemy>().gameObject.SetActive(false);
+            yield return null;
+
+            var platformTop = mover.transform.position.y
+                + mover.transform.lossyScale.y * platformCollider.size.y * 0.5f;
+            var playerBottomOffset = playerCollider.offset.y - playerCollider.size.y * 0.5f;
+            player.transform.position = new Vector2(
+                mover.transform.position.x,
+                platformTop - playerBottomOffset + 0.02f
+            );
+            player.ResetMotion();
+            Physics2D.SyncTransforms();
+
+            for (var i = 0; i < 150
+                && (!player.IsRidingMovingPlatform || mover.transform.position.x < 4.4f); i++)
+            {
+                yield return new WaitForFixedUpdate();
+                yield return null;
+            }
+
+            Assert.That(player.IsRidingMovingPlatform, Is.True, "The route must begin with a real cart ride.");
+            Assert.That(mover.transform.position.x, Is.GreaterThanOrEqualTo(4.4f),
+                "The cart must deliver the player close to the Midway deck.");
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState(Key.D));
+            InputSystem.Update();
+            player.SendMessage("Update");
+
+            for (var i = 0; i < 160 && player.transform.position.x < 15.2f; i++)
+            {
+                yield return new WaitForFixedUpdate();
+                yield return null;
+            }
+
+            Assert.That(player.transform.position.x, Is.GreaterThanOrEqualTo(15.2f),
+                "Keyboard movement must carry the player from the cart across the connected decks.");
+            Assert.That(checkpoint.Activated, Is.True,
+                "Running the authored route must activate the checkpoint before the Magnet Lift.");
+
+            InputSystem.QueueStateEvent(_keyboard, new KeyboardState());
+            InputSystem.Update();
+            player.SendMessage("Update");
+
+            for (var i = 0; i < 160 && magnet.LiftApplicationCount == 0; i++)
+            {
+                yield return new WaitForFixedUpdate();
+                yield return null;
+            }
+
+            Assert.That(magnet.LiftApplicationCount, Is.GreaterThan(0),
+                "The checkpoint route must naturally feed the player through the spring into Magnet Lift.");
+            Assert.That(player.Body.linearVelocity.y, Is.GreaterThan(0f),
+                "Magnet Lift must continue the route upward after the spring launch.");
+            Assert.That(ScrapDashGame.Instance.Checkpoint.x, Is.GreaterThan(14f));
+        }
+
+        [UnityTest]
         public IEnumerator RunawayCartCarriesAnIdleRiderAlongItsRail()
         {
             _root = ScrapDashBootstrap.BuildLevelForTests();
