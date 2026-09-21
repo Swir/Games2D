@@ -603,12 +603,23 @@ namespace ScrapDash.Tests
             var camera = follow.GetComponent<Camera>();
             yield return null;
 
+            var snapCountBeforeTeleport = follow.SnapCount;
             var cameraStartX = follow.transform.position.x;
             player.transform.position = new Vector2(8f, -1.1f);
             player.Body.linearVelocity = Vector2.right * 8f;
             for (var i = 0; i < 4; i++) yield return null;
-            Assert.That(follow.transform.position.x, Is.GreaterThan(cameraStartX + 0.1f), "Camera must smoothly follow forward motion.");
-            Assert.That(follow.transform.position.x, Is.LessThan(player.transform.position.x + 3f), "Camera smoothing must not overshoot the player.");
+
+            Assert.That(follow.SnapCount, Is.GreaterThan(snapCountBeforeTeleport), "Camera must recover immediately after a large displacement.");
+            Assert.That(follow.transform.position.x, Is.GreaterThan(cameraStartX + 0.1f), "Camera must follow forward motion.");
+            Assert.That(follow.transform.position.x, Is.LessThan(player.transform.position.x + 3f), "Camera must not overshoot the player.");
+            Assert.That(follow.IsWithinBounds, Is.True, "Camera must remain inside the authored Level 1 bounds.");
+
+            player.transform.position = new Vector2(12f, 0f);
+            player.Body.linearVelocity = new Vector2(0f, 0.5f);
+            follow.SnapToTarget();
+            yield return null;
+
+            Assert.That(Mathf.Abs(follow.CurrentLookAhead.y), Is.LessThan(0.05f), "Small vertical motion must not make the camera bob.");
 
             var routePoints = new[]
             {
@@ -625,6 +636,7 @@ namespace ScrapDash.Tests
                 var viewport = camera.WorldToViewportPoint(player.transform.position);
                 Assert.That(viewport.x, Is.InRange(0.15f, 0.85f), $"Route point {point} must remain horizontally readable.");
                 Assert.That(viewport.y, Is.InRange(0.15f, 0.85f), $"Route point {point} must remain vertically readable.");
+                Assert.That(follow.IsWithinBounds, Is.True, $"Camera at route point {point} must stay inside level bounds.");
             }
 
             var checkpoint = new Vector2(14.8f, 0.25f);
@@ -634,6 +646,7 @@ namespace ScrapDash.Tests
 
             Assert.That((Vector2)player.transform.position, Is.EqualTo(checkpoint));
             Assert.That(Vector2.Distance(follow.transform.position, checkpoint), Is.LessThan(4f));
+            Assert.That(follow.IsWithinBounds, Is.True, "Respawn camera must return to a valid composition.");
         }
 
         private static IEnumerator WaitForGrounding(PlayerController player)

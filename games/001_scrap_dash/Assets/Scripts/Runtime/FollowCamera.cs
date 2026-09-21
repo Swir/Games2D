@@ -7,8 +7,10 @@ namespace ScrapDash
         [SerializeField] private Vector2 baseOffset = new(1.2f, 1.2f);
         [SerializeField] private float horizontalLookAhead = 1.4f;
         [SerializeField] private float verticalLookAhead = 0.8f;
+        [SerializeField] private float verticalDeadZoneSpeed = 1.1f;
         [SerializeField] private float lookAheadSmoothTime = 0.12f;
         [SerializeField] private float positionSmoothTime = 0.16f;
+        [SerializeField] private float teleportSnapDistance = 8f;
         [SerializeField] private float minX = -10f;
         [SerializeField] private float maxX = 25f;
         [SerializeField] private float minY = -0.5f;
@@ -21,6 +23,13 @@ namespace ScrapDash
         private Vector3 _positionVelocity;
 
         public Transform Target => _target;
+        public Vector2 CurrentLookAhead => _lookAhead;
+        public int SnapCount { get; private set; }
+        public bool IsWithinBounds =>
+            transform.position.x >= minX &&
+            transform.position.x <= maxX &&
+            transform.position.y >= minY &&
+            transform.position.y <= maxY;
 
         public void SetTarget(Transform target)
         {
@@ -36,6 +45,7 @@ namespace ScrapDash
             _lookAheadVelocity = Vector2.zero;
             _positionVelocity = Vector3.zero;
             transform.position = DesiredPosition(Vector2.zero);
+            SnapCount++;
         }
 
         private void LateUpdate()
@@ -43,9 +53,10 @@ namespace ScrapDash
             if (_target == null) return;
 
             var velocity = _targetBody != null ? _targetBody.linearVelocity : Vector2.zero;
+            var verticalVelocity = Mathf.Abs(velocity.y) >= verticalDeadZoneSpeed ? velocity.y : 0f;
             var desiredLookAhead = new Vector2(
                 Mathf.Clamp(velocity.x / 8.5f, -1f, 1f) * horizontalLookAhead,
-                Mathf.Clamp(velocity.y / 13.5f, -1f, 1f) * verticalLookAhead
+                Mathf.Clamp(verticalVelocity / 13.5f, -1f, 1f) * verticalLookAhead
             );
             _lookAhead = Vector2.SmoothDamp(
                 _lookAhead,
@@ -53,9 +64,18 @@ namespace ScrapDash
                 ref _lookAheadVelocity,
                 lookAheadSmoothTime
             );
+
+            var desiredPosition = DesiredPosition(_lookAhead);
+            if ((desiredPosition - transform.position).sqrMagnitude >
+                teleportSnapDistance * teleportSnapDistance)
+            {
+                SnapToTarget();
+                return;
+            }
+
             transform.position = Vector3.SmoothDamp(
                 transform.position,
-                DesiredPosition(_lookAhead),
+                desiredPosition,
                 ref _positionVelocity,
                 positionSmoothTime
             );
