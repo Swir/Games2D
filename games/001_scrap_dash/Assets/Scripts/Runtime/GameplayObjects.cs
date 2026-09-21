@@ -393,6 +393,104 @@ namespace ScrapDash
         }
     }
 
+    public sealed class ObjectivePointer : MonoBehaviour
+    {
+        [SerializeField] private float heightAbovePlayer = 1.75f;
+        private Transform _player;
+        private Transform _currentTarget;
+        private SpriteRenderer[] _renderers;
+
+        public string CurrentTargetName => _currentTarget != null ? _currentTarget.name : string.Empty;
+        public bool IsPointingToExit { get; private set; }
+        public bool Visible { get; private set; }
+        public int TargetChangeCount { get; private set; }
+        public float TargetDistance => _player != null && _currentTarget != null
+            ? Vector2.Distance(_player.position, _currentTarget.position)
+            : 0f;
+
+        public void Configure(Transform player)
+        {
+            _player = player;
+            _renderers = GetComponentsInChildren<SpriteRenderer>(true);
+            RefreshTarget();
+        }
+
+        public void RefreshTarget()
+        {
+            var previousTarget = _currentTarget;
+            var game = ScrapDashGame.Instance;
+            IsPointingToExit = game != null && game.ScrapObjectiveMet;
+
+            if (IsPointingToExit)
+            {
+                _currentTarget = FindFirstObjectByType<FinishGate>()?.transform;
+            }
+            else
+            {
+                _currentTarget = null;
+                var bestDistance = float.PositiveInfinity;
+                var scraps = FindObjectsByType<ScrapCollectible>(FindObjectsSortMode.None);
+                foreach (var scrap in scraps)
+                {
+                    var distance = _player != null
+                        ? ((Vector2)(scrap.transform.position - _player.position)).sqrMagnitude
+                        : 0f;
+                    if (distance >= bestDistance) continue;
+                    bestDistance = distance;
+                    _currentTarget = scrap.transform;
+                }
+            }
+
+            if (_currentTarget != previousTarget) TargetChangeCount++;
+        }
+
+        private void Update()
+        {
+            var game = ScrapDashGame.Instance;
+            if (_player == null || game == null || game.Won)
+            {
+                SetVisible(false);
+                return;
+            }
+
+            var shouldPointToExit = game.ScrapObjectiveMet;
+            if (_currentTarget == null || shouldPointToExit != IsPointingToExit)
+            {
+                RefreshTarget();
+            }
+
+            SetVisible(_currentTarget != null);
+            if (!Visible) return;
+
+            transform.position = _player.position + Vector3.up * heightAbovePlayer;
+            var direction = (Vector2)(_currentTarget.position - transform.position);
+            if (direction.sqrMagnitude > 0.001f)
+            {
+                var angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+                transform.rotation = Quaternion.Euler(0f, 0f, angle);
+            }
+
+            var baseColor = IsPointingToExit
+                ? ProceduralVisuals.Hex("#FFE066")
+                : ProceduralVisuals.Hex("#62E5FF");
+            var pulse = 0.82f + Mathf.Sin(Time.unscaledTime * 8f) * 0.18f;
+            foreach (var sprite in _renderers)
+            {
+                if (sprite != null) sprite.color = Color.Lerp(baseColor, Color.white, pulse * 0.32f);
+            }
+        }
+
+        private void SetVisible(bool visible)
+        {
+            Visible = visible;
+            if (_renderers == null) return;
+            foreach (var sprite in _renderers)
+            {
+                if (sprite != null) sprite.enabled = visible;
+            }
+        }
+    }
+
     public sealed class FinishGate : MonoBehaviour
     {
         private SpriteRenderer _renderer;

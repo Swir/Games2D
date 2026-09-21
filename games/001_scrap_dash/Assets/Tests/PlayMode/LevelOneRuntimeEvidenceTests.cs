@@ -234,6 +234,43 @@ namespace ScrapDash.Tests
         }
 
         [UnityTest]
+        public IEnumerator ObjectivePointerGuidesScrapCollectionThenSwitchesToTheExit()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            var game = Object.FindFirstObjectByType<ScrapDashGame>();
+            var pointer = Object.FindFirstObjectByType<ObjectivePointer>();
+            Object.FindFirstObjectByType<PatrolEnemy>().gameObject.SetActive(false);
+            yield return null;
+
+            Assert.That(pointer, Is.Not.Null);
+            Assert.That(pointer.Visible, Is.True);
+            Assert.That(pointer.IsPointingToExit, Is.False);
+            Assert.That(pointer.CurrentTargetName, Does.StartWith("Scrap_"));
+
+            for (var i = 0; i < LevelDefinition.ScrapRequiredForFinish; i++)
+            {
+                pointer.RefreshTarget();
+                var target = GameObject.Find(pointer.CurrentTargetName);
+                Assert.That(target, Is.Not.Null, "The pointer must always select a remaining physical scrap.");
+                player.transform.position = target.transform.position;
+                player.Body.linearVelocity = Vector2.zero;
+                Physics2D.SyncTransforms();
+                yield return new WaitForFixedUpdate();
+                yield return null;
+            }
+
+            pointer.RefreshTarget();
+            pointer.SendMessage("Update");
+
+            Assert.That(game.ScrapObjectiveMet, Is.True);
+            Assert.That(pointer.IsPointingToExit, Is.True, "The pointer must switch goals as soon as the scrap objective is met.");
+            Assert.That(pointer.CurrentTargetName, Is.EqualTo("FinishGate"));
+            Assert.That(pointer.TargetDistance, Is.GreaterThan(0f));
+            Assert.That(pointer.TargetChangeCount, Is.GreaterThanOrEqualTo(LevelDefinition.ScrapRequiredForFinish + 1));
+        }
+
+        [UnityTest]
         public IEnumerator PhysicalScrapTriggersUnlockTheFinishGate()
         {
             _root = ScrapDashBootstrap.BuildLevelForTests();

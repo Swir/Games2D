@@ -37,6 +37,7 @@ namespace ScrapDash
             CreateCamera(root.transform, player.transform);
             CreateLevelGeometry(root.transform);
             CreateGameplay(root.transform);
+            CreateObjectivePointer(root.transform, player.transform);
             CreateWayfinding(root.transform);
             return root;
         }
@@ -204,6 +205,41 @@ namespace ScrapDash
             finishCollider.isTrigger = true;
             finish.AddComponent<FinishGate>();
             ProceduralVisuals.Rect("FinishTop", new Vector2(-0.65f, 1f), new Vector2(1.7f, 0.25f), Danger, finish.transform, 11);
+        }
+
+        private static void CreateObjectivePointer(Transform parent, Transform player)
+        {
+            var pointer = new GameObject("ObjectivePointer");
+            pointer.transform.SetParent(parent, false);
+
+            ProceduralVisuals.Rect(
+                "ObjectiveArrowShaft",
+                new Vector2(0.25f, 0f),
+                new Vector2(0.55f, 0.1f),
+                Cyan,
+                pointer.transform,
+                40
+            );
+            var upper = ProceduralVisuals.Rect(
+                "ObjectiveArrowUpper",
+                new Vector2(0.55f, 0.12f),
+                new Vector2(0.34f, 0.1f),
+                Cyan,
+                pointer.transform,
+                40
+            );
+            var lower = ProceduralVisuals.Rect(
+                "ObjectiveArrowLower",
+                new Vector2(0.55f, -0.12f),
+                new Vector2(0.34f, 0.1f),
+                Cyan,
+                pointer.transform,
+                40
+            );
+            upper.transform.localRotation = Quaternion.Euler(0f, 0f, -42f);
+            lower.transform.localRotation = Quaternion.Euler(0f, 0f, 42f);
+
+            pointer.AddComponent<ObjectivePointer>().Configure(player);
         }
 
         private static void CreateWayfinding(Transform parent)
