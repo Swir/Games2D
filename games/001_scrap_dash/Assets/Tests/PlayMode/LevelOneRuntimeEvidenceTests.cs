@@ -517,6 +517,48 @@ namespace ScrapDash.Tests
         }
 
         [UnityTest]
+        public IEnumerator RunawayCartCarriesAnIdleRiderAlongItsRail()
+        {
+            _root = ScrapDashBootstrap.BuildLevelForTests();
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            var mover = Object.FindFirstObjectByType<MovingPlatform>();
+            var platformCollider = mover.GetComponent<BoxCollider2D>();
+            var playerCollider = player.GetComponent<CapsuleCollider2D>();
+            yield return null;
+
+            var platformTop = mover.transform.position.y
+                + mover.transform.lossyScale.y * platformCollider.size.y * 0.5f;
+            var playerBottomOffset = playerCollider.offset.y - playerCollider.size.y * 0.5f;
+            player.transform.position = new Vector2(
+                mover.transform.position.x,
+                platformTop - playerBottomOffset + 0.02f
+            );
+            player.Body.linearVelocity = Vector2.zero;
+            Physics2D.SyncTransforms();
+
+            for (var i = 0; i < 50 && (mover.IsWaitingAtEndpoint || !player.IsRidingMovingPlatform); i++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.That(player.IsRidingMovingPlatform, Is.True, "The player must recognize the cart as active ground support.");
+            var playerStart = (Vector2)player.transform.position;
+            var moverStart = (Vector2)mover.transform.position;
+            var relativeStart = playerStart - moverStart;
+
+            for (var i = 0; i < 18; i++) yield return new WaitForFixedUpdate();
+
+            var playerTravel = (Vector2)player.transform.position - playerStart;
+            var moverTravel = (Vector2)mover.transform.position - moverStart;
+            var relativeEnd = (Vector2)player.transform.position - (Vector2)mover.transform.position;
+
+            Assert.That(moverTravel.magnitude, Is.GreaterThan(0.2f), "The cart must advance along its rail during the ride.");
+            Assert.That(playerTravel.x, Is.GreaterThan(0.12f), "An idle rider must be carried forward by the cart.");
+            Assert.That(Vector2.Distance(relativeStart, relativeEnd), Is.LessThan(0.45f), "The rider must remain stable relative to the cart.");
+            Assert.That(player.SupportVelocity.sqrMagnitude, Is.GreaterThan(0f), "The controller must consume the cart velocity while supported.");
+        }
+
+        [UnityTest]
         public IEnumerator PhysicalPatrolEnemyWarnsChargesAndDamagesThePlayer()
         {
             _root = ScrapDashBootstrap.BuildLevelForTests();

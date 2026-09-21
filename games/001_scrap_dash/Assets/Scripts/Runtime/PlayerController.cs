@@ -55,6 +55,8 @@ namespace ScrapDash
         public float TotalDashDistance { get; private set; }
         public bool DashTrailEmitting => _dashTrail != null && _dashTrail.emitting;
         public bool IsInvulnerable => Time.unscaledTime < _invulnerableUntil;
+        public bool IsRidingMovingPlatform => IsGrounded && _supportPlatform != null;
+        public Vector2 SupportVelocity => _supportVelocity;
 
         private void Awake()
         {
@@ -317,7 +319,17 @@ namespace ScrapDash
             }
         }
 
+        private void OnCollisionEnter2D(Collision2D collision)
+        {
+            TrackGroundContact(collision);
+        }
+
         private void OnCollisionStay2D(Collision2D collision)
+        {
+            TrackGroundContact(collision);
+        }
+
+        private void TrackGroundContact(Collision2D collision)
         {
             var supports = false;
             foreach (var contact in collision.contacts)
@@ -329,19 +341,18 @@ namespace ScrapDash
                 }
             }
 
-            if (supports)
-            {
-                _groundContacts.Add(collision.collider);
-                var platform = collision.collider.GetComponent<MovingPlatform>();
-                if (platform != null)
-                {
-                    _supportPlatform = platform;
-                    _supportVelocity = platform.Velocity;
-                }
-            }
-            else
+            if (!supports)
             {
                 _groundContacts.Remove(collision.collider);
+                return;
+            }
+
+            _groundContacts.Add(collision.collider);
+            var platform = collision.collider.GetComponent<MovingPlatform>();
+            if (platform != null)
+            {
+                _supportPlatform = platform;
+                _supportVelocity = platform.Velocity;
             }
         }
 
