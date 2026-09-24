@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/GameUserSettings.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
@@ -74,14 +75,17 @@ AScrapDashCharacter::AScrapDashCharacter()
     DashAction = CreateDefaultSubobject<UInputAction>(TEXT("DashAction"));
     PauseAction = CreateDefaultSubobject<UInputAction>(TEXT("PauseAction"));
     RestartAction = CreateDefaultSubobject<UInputAction>(TEXT("RestartAction"));
+    FullscreenAction = CreateDefaultSubobject<UInputAction>(TEXT("FullscreenAction"));
 
     MoveAction->ValueType = EInputActionValueType::Axis1D;
     JumpAction->ValueType = EInputActionValueType::Boolean;
     DashAction->ValueType = EInputActionValueType::Boolean;
     PauseAction->ValueType = EInputActionValueType::Boolean;
     RestartAction->ValueType = EInputActionValueType::Boolean;
+    FullscreenAction->ValueType = EInputActionValueType::Boolean;
     PauseAction->bTriggerWhenPaused = true;
     RestartAction->bTriggerWhenPaused = true;
+    FullscreenAction->bTriggerWhenPaused = true;
 }
 
 void AScrapDashCharacter::BeginPlay()
@@ -126,6 +130,8 @@ void AScrapDashCharacter::InstallRuntimeInputMap()
     RuntimeInputContext->MapKey(RestartAction, EKeys::R);
     RuntimeInputContext->MapKey(RestartAction, EKeys::Gamepad_FaceButton_Top);
 
+    RuntimeInputContext->MapKey(FullscreenAction, EKeys::F11);
+
     if (APlayerController* PC = Cast<APlayerController>(Controller))
     {
         if (ULocalPlayer* LocalPlayer = PC->GetLocalPlayer())
@@ -154,6 +160,7 @@ void AScrapDashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
         Enhanced->BindAction(DashAction, ETriggerEvent::Started, this, &AScrapDashCharacter::DashStarted);
         Enhanced->BindAction(PauseAction, ETriggerEvent::Started, this, &AScrapDashCharacter::TogglePause);
         Enhanced->BindAction(RestartAction, ETriggerEvent::Started, this, &AScrapDashCharacter::RestartCheckpoint);
+        Enhanced->BindAction(FullscreenAction, ETriggerEvent::Started, this, &AScrapDashCharacter::ToggleFullscreen);
     }
 }
 
@@ -249,6 +256,19 @@ void AScrapDashCharacter::RestartCheckpoint(const FInputActionValue& Value)
     if (AScrapDashGameMode* Mode = GetWorld()->GetAuthGameMode<AScrapDashGameMode>())
     {
         Mode->RespawnPlayer(this);
+    }
+}
+
+void AScrapDashCharacter::ToggleFullscreen(const FInputActionValue& Value)
+{
+    if (UGameUserSettings* Settings = UGameUserSettings::GetGameUserSettings())
+    {
+        const EWindowMode::Type Current = Settings->GetFullscreenMode();
+        Settings->SetFullscreenMode(Current == EWindowMode::Windowed
+            ? EWindowMode::Fullscreen
+            : EWindowMode::Windowed);
+        Settings->ApplySettings(false);
+        Settings->SaveSettings();
     }
 }
 
