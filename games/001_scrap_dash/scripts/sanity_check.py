@@ -44,6 +44,8 @@ def main() -> int:
         "Gamepad_LeftX",
         "Gamepad_FaceButton_Bottom",
         "Gamepad_FaceButton_Right",
+        "FullscreenAction",
+        "UGameUserSettings",
     )
     must_contain(
         "Source/ScrapDash/ScrapDashActors.cpp",
@@ -54,6 +56,7 @@ def main() -> int:
         "AScrapMagnetZone",
         "AScrapCheckpoint",
         "AScrapFinishGate",
+        "GetVelocity().X",
         "Closing Time Circuit",
     )
     must_contain(
@@ -67,6 +70,11 @@ def main() -> int:
         "Config/DefaultGame.ini",
         "GlobalDefaultGameMode=/Script/ScrapDash.ScrapDashGameMode",
         "GameDefaultMap=/Engine/Maps/Entry",
+    )
+    must_contain(
+        "Config/DefaultGameUserSettings.ini",
+        "FullscreenMode=1",
+        "bUseVSync=True",
     )
     must_contain(
         "Config/DefaultInput.ini",
