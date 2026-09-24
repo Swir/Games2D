@@ -48,6 +48,7 @@ The first vertical slice is intentionally finite:
 | Dash | Left Shift | Right face button |
 | Pause | Esc | Start/Menu |
 | Restart checkpoint | R | Top face button |
+| Fullscreen / windowed | F11 | — |
 
 Input is implemented through **Enhanced Input** in C++.
 
@@ -69,7 +70,7 @@ The first source vertical slice already contains code paths for:
 - perspective side camera;
 - keyboard and gamepad Enhanced Input;
 - lethal hazard and fall recovery;
-- patrol enemy;
+- patrol enemy that can be recycled by a high-speed dash;
 - five scrap collectibles;
 - moving platform/cart;
 - Magnet Lift;
