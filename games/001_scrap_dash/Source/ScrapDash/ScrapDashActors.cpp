@@ -137,6 +137,11 @@ void AScrapEnemy::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 {
     if (AScrapDashCharacter* Player = Cast<AScrapDashCharacter>(OtherActor))
     {
+        if (FMath::Abs(Player->GetVelocity().X) >= 1100.0f)
+        {
+            Destroy();
+            return;
+        }
         Player->Die();
     }
 }
