@@ -42,9 +42,12 @@ jobs:
       - name: Check active project is Unreal, not Unity
         shell: pwsh
         run: |
-          if (Test-Path 'games/001_scrap_dash/Assets') { throw 'Unity Assets folder must not be active' }
-          if (Test-Path 'games/001_scrap_dash/Packages') { throw 'Unity Packages folder must not be active' }
-          if (Test-Path 'games/001_scrap_dash/ProjectSettings') { throw 'Unity ProjectSettings folder must not be active' }
+          $dirs = Get-ChildItem 'games/001_scrap_dash' -Directory | ForEach-Object { $_.Name }
+          foreach ($forbidden in @('Assets', 'Packages', 'ProjectSettings')) {
+            if ($dirs | Where-Object { $_ -ceq $forbidden }) {
+              throw "Unity directory must not be active: $forbidden"
+            }
+          }
           if (-not (Test-Path 'games/001_scrap_dash/ScrapDash.uproject')) { throw 'Missing Unreal project descriptor' }
 
   unreal-build-status:
