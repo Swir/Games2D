@@ -1,0 +1,62 @@
+name: SCRAP DASH Unreal Source Sanity
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'games/001_scrap_dash/**'
+      - 'README.md'
+      - '.gitignore'
+      - '.github/workflows/scrap-dash-unreal-sanity.yml'
+  pull_request:
+    paths:
+      - 'games/001_scrap_dash/**'
+      - 'README.md'
+      - '.gitignore'
+      - '.github/workflows/scrap-dash-unreal-sanity.yml'
+
+jobs:
+  source-contract:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Verify Unreal project source contracts
+        run: python games/001_scrap_dash/scripts/sanity_check.py
+      - name: Parse PowerShell helpers
+        shell: pwsh
+        run: |
+          $failed = $false
+          Get-ChildItem 'games/001_scrap_dash/scripts' -Filter '*.ps1' | ForEach-Object {
+            $tokens = $null
+            $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$errors)
+            if ($errors.Count -gt 0) {
+              $failed = $true
+              Write-Error ("PowerShell parse error in {0}: {1}" -f $_.Name, ($errors | Out-String))
+            }
+          }
+          if ($failed) { exit 1 }
+      - name: Check active project is Unreal, not Unity
+        shell: pwsh
+        run: |
+          $dirs = Get-ChildItem 'games/001_scrap_dash' -Directory | ForEach-Object { $_.Name }
+          foreach ($forbidden in @('Assets', 'Packages', 'ProjectSettings')) {
+            if ($dirs | Where-Object { $_ -ceq $forbidden }) {
+              throw "Unity directory must not be active: $forbidden"
+            }
+          }
+          if (-not (Test-Path 'games/001_scrap_dash/ScrapDash.uproject')) { throw 'Missing Unreal project descriptor' }
+
+  unreal-build-status:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Record hosted-runner limitation
+        shell: pwsh
+        run: |
+          Write-Host 'GitHub-hosted runner does not include Unreal Engine.'
+          Write-Host 'Source sanity is verified here; real Unreal compile/cook/package remains pending on a machine/runner with Unreal installed.'
+          Write-Host 'Use games/001_scrap_dash/scripts/Build-Win64.ps1 on the Unreal machine.'

@@ -1,0 +1,36 @@
+name: SCRAP DASH Unreal Win64 Package
+
+on:
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: [self-hosted, Windows, X64]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build and package SCRAP DASH
+        shell: pwsh
+        run: |
+          $out = Join-Path $env:RUNNER_TEMP 'ScrapDashPackage'
+          .\games\001_scrap_dash\scripts\Build-Win64.ps1 -OutputDir $out
+
+      - name: Create demo archive and checksum
+        shell: pwsh
+        run: |
+          $out = Join-Path $env:RUNNER_TEMP 'ScrapDashPackage'
+          $exe = Get-ChildItem $out -Recurse -Filter 'ScrapDash.exe' -File | Select-Object -First 1
+          if (-not $exe) { throw 'ScrapDash.exe not found after BuildCookRun' }
+          $zip = Join-Path $env:RUNNER_TEMP 'SCRAP-DASH-Level1-Windows.zip'
+          Compress-Archive -Path (Join-Path $out '*') -DestinationPath $zip -Force
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content -Encoding ascii (Join-Path $env:RUNNER_TEMP 'SCRAP-DASH-Level1-Windows.zip.sha256') "$hash  SCRAP-DASH-Level1-Windows.zip"
+
+      - name: Upload Windows demo candidate
+        uses: actions/upload-artifact@v6
+        with:
+          name: SCRAP-DASH-Level1-Windows
+          path: |
+            ${{ runner.temp }}\SCRAP-DASH-Level1-Windows.zip
+            ${{ runner.temp }}\SCRAP-DASH-Level1-Windows.zip.sha256
+          if-no-files-found: error

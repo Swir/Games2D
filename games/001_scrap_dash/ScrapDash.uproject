@@ -1,0 +1,18 @@
+{
+  "FileVersion": 3,
+  "Category": "Games",
+  "Description": "SCRAP DASH — original 2.5D platformer vertical slice.",
+  "Modules": [
+    {
+      "Name": "ScrapDash",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+    {
+      "Name": "EnhancedInput",
+      "Enabled": true
+    }
+  ]
+}
