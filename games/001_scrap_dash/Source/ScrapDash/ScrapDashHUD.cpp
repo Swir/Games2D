@@ -29,7 +29,7 @@ void AScrapDashHUD::DrawHUD()
     DrawText(DeathLine, FLinearColor(1.0f, 0.78f, 0.16f), 34.0f, 60.0f,
         GEngine->GetSmallFont(), 1.0f, false);
 
-    DrawText(TEXT("MOVE  A/D or Left Stick    JUMP  Space/A    DASH  Shift/B    RESTART  R/Y"),
+    DrawText(TEXT("MOVE  A/D or Left Stick    JUMP  Space/A    DASH  Shift/B    RESTART  R/Y    FULLSCREEN  F11"),
         FLinearColor(0.72f, 0.78f, 0.85f), 34.0f, Canvas->ClipY - 42.0f,
         GEngine->GetSmallFont(), 0.85f, false);
 
