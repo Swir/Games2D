@@ -36,6 +36,7 @@ private:
     void DashStarted(const FInputActionValue& Value);
     void TogglePause(const FInputActionValue& Value);
     void RestartCheckpoint(const FInputActionValue& Value);
+    void ToggleFullscreen(const FInputActionValue& Value);
     void TryConsumeBufferedJump();
 
     UPROPERTY(VisibleAnywhere, Category="SCRAP DASH|Camera")
@@ -67,6 +68,9 @@ private:
 
     UPROPERTY(Transient)
     TObjectPtr<UInputAction> RestartAction;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UInputAction> FullscreenAction;
 
     UPROPERTY(EditDefaultsOnly, Category="SCRAP DASH|Movement")
     float DashSpeed = 1450.0f;
