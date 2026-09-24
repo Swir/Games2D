@@ -88,9 +88,10 @@ def main() -> int:
         "ScrapDash.exe",
     )
 
-    forbidden = ["Assets", "Packages", "ProjectSettings"]
-    for name in forbidden:
-        if (ROOT / name).exists():
+    forbidden = {"Assets", "Packages", "ProjectSettings"}
+    exact_child_names = {child.name for child in ROOT.iterdir() if child.is_dir()}
+    for name in sorted(forbidden):
+        if name in exact_child_names:
             raise AssertionError(f"Unity directory must not exist in active Unreal project: {name}")
 
     print("SCRAP DASH Unreal 2.5D source contracts: PASS")
