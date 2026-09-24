@@ -1,0 +1,23 @@
+# Unreal Engine generated folders
+**/Binaries/
+**/DerivedDataCache/
+**/Intermediate/
+**/Saved/
+**/.vs/
+**/Builds/
+**/Packaged/
+**/StagedBuilds/
+
+# IDE / OS
+.vscode/
+.idea/
+*.sln
+*.VC.db
+*.VC.opendb
+.DS_Store
+Thumbs.db
+
+# Keep source project descriptors/config/content tracked
+!**/Config/
+!**/Content/
+!**/Source/
