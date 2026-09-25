@@ -46,6 +46,9 @@ def main() -> int:
         "Player is possessed in PIE",
         "Moving platform travels during runtime",
         "Patrol enemy moves during runtime",
+        "Magnet Lift captures the player",
+        "Magnet Lift applies sustained upward velocity",
+        "Magnet Lift centers the player toward its route",
         "Checkpoint controls the real respawn location",
         "Five scrap collectibles spawn",
         "Moving platform section spawns",
@@ -94,6 +97,11 @@ def main() -> int:
         "AScrapCheckpoint",
         "AScrapFinishGate",
         "GetVelocity().X",
+        "SetActorLocation(Location, true)",
+        "OnComponentEndOverlap",
+        "EngagePlayer",
+        "TargetHorizontalSpeed",
+        "Velocity.Z = FMath::Max",
         "Closing Time Circuit",
     )
     must_contain(

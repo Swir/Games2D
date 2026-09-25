@@ -5,6 +5,7 @@
 #include "Engine/World.h"
 #include "ScrapDashActors.generated.h"
 
+class AScrapDashCharacter;
 class UBoxComponent;
 class USphereComponent;
 class UStaticMeshComponent;
@@ -110,11 +111,20 @@ class SCRAPDASH_API AScrapMagnetZone : public AActor
     GENERATED_BODY()
 public:
     AScrapMagnetZone();
+    virtual void Tick(float DeltaSeconds) override;
+
+    void EngagePlayer(AScrapDashCharacter* Player);
+    bool HasCapturedPlayer() const { return ActivePlayer.IsValid(); }
+
 private:
     UFUNCTION()
     void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
         const FHitResult& SweepResult);
+
+    UFUNCTION()
+    void OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UBoxComponent> Trigger;
@@ -124,6 +134,14 @@ private:
 
     UPROPERTY(EditAnywhere, Category="SCRAP DASH")
     float LiftVelocity = 1280.0f;
+
+    UPROPERTY(EditAnywhere, Category="SCRAP DASH")
+    float CenteringStrength = 5.0f;
+
+    UPROPERTY(EditAnywhere, Category="SCRAP DASH")
+    float MaxCenteringSpeed = 420.0f;
+
+    TWeakObjectPtr<AScrapDashCharacter> ActivePlayer;
 };
 
 UCLASS()

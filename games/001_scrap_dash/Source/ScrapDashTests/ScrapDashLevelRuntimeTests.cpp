@@ -101,6 +101,25 @@ bool FVerifyScrapDashRuntimeAssembly::Update()
             !PatrolEnemy->GetActorLocation().Equals(FVector(590.0f, 0.0f, 20.0f), 5.0f));
     }
 
+    AScrapMagnetZone* MagnetLift = nullptr;
+    for (TActorIterator<AScrapMagnetZone> It(World); It; ++It)
+    {
+        MagnetLift = *It;
+        break;
+    }
+    if (MagnetLift && Player)
+    {
+        Player->GetCharacterMovement()->StopMovementImmediately();
+        MagnetLift->EngagePlayer(Player);
+        MagnetLift->Tick(0.1f);
+        Test->TestTrue(TEXT("Magnet Lift captures the player"),
+            MagnetLift->HasCapturedPlayer());
+        Test->TestTrue(TEXT("Magnet Lift applies sustained upward velocity"),
+            Player->GetVelocity().Z >= 1200.0f);
+        Test->TestTrue(TEXT("Magnet Lift centers the player toward its route"),
+            Player->GetVelocity().X > 0.0f);
+    }
+
     if (Mode && Player)
     {
         const FVector RuntimeCheckpoint(2090.0f, 0.0f, 635.0f);
