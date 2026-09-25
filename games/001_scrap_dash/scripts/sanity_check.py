@@ -25,8 +25,31 @@ def main() -> int:
     modules = {item["Name"] for item in project.get("Modules", [])}
     plugins = {item["Name"] for item in project.get("Plugins", []) if item.get("Enabled")}
     assert "ScrapDash" in modules, "ScrapDash runtime module is not declared"
+    assert "ScrapDashTests" in modules, "ScrapDash editor test module is not declared"
     assert "EnhancedInput" in plugins, "Enhanced Input plugin must be enabled"
 
+    must_contain(
+        "Source/ScrapDashEditor.Target.cs",
+        '"ScrapDash"',
+        '"ScrapDashTests"',
+    )
+    must_contain(
+        "Source/ScrapDashTests/ScrapDashTests.Build.cs",
+        '"ScrapDash"',
+        '"UnrealEd"',
+    )
+    must_contain(
+        "Source/ScrapDashTests/ScrapDashLevelRuntimeTests.cpp",
+        "ScrapDash.Level1.RuntimeAssembly",
+        "FStartPIECommand",
+        "GEditor->PlayWorld",
+        "Five scrap collectibles spawn",
+        "Moving platform section spawns",
+        "Magnet Lift spawns",
+        "Checkpoint spawns",
+        "Finish gate spawns",
+        "TryCompleteLevel",
+    )
     must_contain(
         "Source/ScrapDash/ScrapDash.Build.cs",
         '"EnhancedInput"',
