@@ -250,16 +250,34 @@ void AScrapDashCharacter::TryConsumeBufferedJump()
 
 void AScrapDashCharacter::DashStarted(const FInputActionValue& Value)
 {
+    TryStartDash(LastMoveDirection);
+}
+
+bool AScrapDashCharacter::TryStartDash(float Direction)
+{
+    if (!GetWorld())
+    {
+        return false;
+    }
+
     const float Now = GetWorld()->GetTimeSeconds();
     if (!bDashAvailable || Now < DashReadyTime)
     {
-        return;
+        return false;
     }
 
+    Direction = FMath::IsNearlyZero(Direction) ? 1.0f : FMath::Sign(Direction);
+    LastMoveDirection = Direction;
     bDashAvailable = false;
     DashReadyTime = Now + DashCooldown;
-    const float Direction = FMath::IsNearlyZero(LastMoveDirection) ? 1.0f : FMath::Sign(LastMoveDirection);
+    DashAttackUntil = Now + DashAttackDuration;
     LaunchCharacter(FVector(Direction * DashSpeed, 0.0f, DashVerticalBoost), true, false);
+    return true;
+}
+
+bool AScrapDashCharacter::IsDashAttacking() const
+{
+    return GetWorld() && GetWorld()->GetTimeSeconds() < DashAttackUntil;
 }
 
 void AScrapDashCharacter::TogglePause(const FInputActionValue& Value)
@@ -312,6 +330,7 @@ void AScrapDashCharacter::RespawnAt(const FVector& WorldLocation)
     LastGroundedTime = GetWorld()->GetTimeSeconds();
     JumpBufferedUntil = -1000.0f;
     DashReadyTime = 0.0f;
+    DashAttackUntil = -1000.0f;
     bDashAvailable = true;
     RespawnGuard.Arm(GetWorld()->GetTimeSeconds(), RespawnProtectionSeconds);
 }
@@ -321,17 +340,17 @@ bool AScrapDashCharacter::IsRespawnProtected() const
     return GetWorld() && !RespawnGuard.CanReceiveLethalHit(GetWorld()->GetTimeSeconds());
 }
 
-void AScrapDashCharacter::Die()
+bool AScrapDashCharacter::Die()
 {
     if (!GetWorld())
     {
-        return;
+        return false;
     }
 
     const float Now = GetWorld()->GetTimeSeconds();
     if (!RespawnGuard.CanReceiveLethalHit(Now))
     {
-        return;
+        return false;
     }
 
     // Arm immediately so overlapping hazard/enemy callbacks cannot count more than one death.
@@ -339,5 +358,7 @@ void AScrapDashCharacter::Die()
     if (AScrapDashGameMode* Mode = GetWorld()->GetAuthGameMode<AScrapDashGameMode>())
     {
         Mode->RespawnPlayer(this, true);
+        return true;
     }
+    return false;
 }

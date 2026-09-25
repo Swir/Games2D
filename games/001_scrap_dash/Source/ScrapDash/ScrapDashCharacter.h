@@ -41,7 +41,9 @@ public:
     virtual void OnRep_Controller() override;
 
     void RespawnAt(const FVector& WorldLocation);
-    void Die();
+    bool Die();
+    bool TryStartDash(float Direction);
+    bool IsDashAttacking() const;
     bool IsRespawnProtected() const;
     bool IsRuntimeInputInstalled() const { return bInputMapInstalled; }
 
@@ -102,6 +104,9 @@ private:
     float DashCooldown = 0.35f;
 
     UPROPERTY(EditDefaultsOnly, Category="SCRAP DASH|Movement")
+    float DashAttackDuration = 0.18f;
+
+    UPROPERTY(EditDefaultsOnly, Category="SCRAP DASH|Movement")
     float CoyoteTime = 0.14f;
 
     UPROPERTY(EditDefaultsOnly, Category="SCRAP DASH|Movement")
@@ -120,5 +125,6 @@ private:
     float LastGroundedTime = -1000.0f;
     float JumpBufferedUntil = -1000.0f;
     float DashReadyTime = 0.0f;
+    float DashAttackUntil = -1000.0f;
     float LastMoveDirection = 1.0f;
 };

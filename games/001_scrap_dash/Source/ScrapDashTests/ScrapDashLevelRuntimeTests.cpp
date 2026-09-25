@@ -126,12 +126,20 @@ bool FVerifyScrapDashRuntimeAssembly::Update()
             Player->GetVelocity().X > 0.0f);
     }
 
-    if (Mode && Player)
+    AScrapHazard* Hazard = nullptr;
+    for (TActorIterator<AScrapHazard> It(World); It; ++It)
+    {
+        Hazard = *It;
+        break;
+    }
+
+    if (Mode && Player && Hazard)
     {
         const FVector RuntimeCheckpoint(2090.0f, 0.0f, 635.0f);
         const int32 DeathsBeforeRespawn = Mode->GetDeathCount();
         Mode->SetCheckpoint(RuntimeCheckpoint);
-        Player->Die();
+        Test->TestTrue(TEXT("Hazard contact is lethal"),
+            Hazard->ResolvePlayerContact(Player));
         Test->TestEqual(TEXT("Lethal hit increments reboot count"),
             Mode->GetDeathCount(), DeathsBeforeRespawn + 1);
         Test->TestTrue(TEXT("Checkpoint controls the real respawn location"),
@@ -157,6 +165,85 @@ bool FVerifyScrapDashRuntimeAssembly::Update()
     return true;
 }
 
+
+DEFINE_LATENT_AUTOMATION_COMMAND_ONE_PARAMETER(
+    FVerifyEnemyDangerousContact,
+    FAutomationTestBase*,
+    Test);
+
+bool FVerifyEnemyDangerousContact::Update()
+{
+    UWorld* World = GEditor ? GEditor->PlayWorld : nullptr;
+    AScrapDashGameMode* Mode = World ? World->GetAuthGameMode<AScrapDashGameMode>() : nullptr;
+    AScrapDashCharacter* Player = nullptr;
+    AScrapEnemy* Enemy = nullptr;
+    if (World)
+    {
+        for (TActorIterator<AScrapDashCharacter> It(World); It; ++It)
+        {
+            Player = *It;
+            break;
+        }
+        for (TActorIterator<AScrapEnemy> It(World); It; ++It)
+        {
+            Enemy = *It;
+            break;
+        }
+    }
+
+    Test->TestNotNull(TEXT("Player exists for enemy contact"), Player);
+    Test->TestNotNull(TEXT("Patrol enemy exists for contact"), Enemy);
+    if (Mode && Player && Enemy)
+    {
+        const int32 DeathsBeforeContact = Mode->GetDeathCount();
+        Test->TestFalse(TEXT("Ordinary contact does not defeat the enemy"),
+            Enemy->ResolvePlayerContact(Player));
+        Test->TestEqual(TEXT("Patrol enemy contact is lethal"),
+            Mode->GetDeathCount(), DeathsBeforeContact + 1);
+    }
+    return true;
+}
+
+DEFINE_LATENT_AUTOMATION_COMMAND_ONE_PARAMETER(
+    FVerifyDashCombat,
+    FAutomationTestBase*,
+    Test);
+
+bool FVerifyDashCombat::Update()
+{
+    UWorld* World = GEditor ? GEditor->PlayWorld : nullptr;
+    AScrapDashCharacter* Player = nullptr;
+    AScrapEnemy* Enemy = nullptr;
+    if (World)
+    {
+        for (TActorIterator<AScrapDashCharacter> It(World); It; ++It)
+        {
+            Player = *It;
+            break;
+        }
+        for (TActorIterator<AScrapEnemy> It(World); It; ++It)
+        {
+            Enemy = *It;
+            break;
+        }
+    }
+
+    Test->TestNotNull(TEXT("Player exists for dash combat"), Player);
+    Test->TestNotNull(TEXT("Patrol enemy survives until dash combat"), Enemy);
+    if (Player && Enemy)
+    {
+        Test->TestTrue(TEXT("Directional dash starts in runtime"),
+            Player->TryStartDash(1.0f));
+        Test->TestTrue(TEXT("Dash opens its attack window"),
+            Player->IsDashAttacking());
+        Test->TestTrue(TEXT("Dash defeats the patrol enemy"),
+            Enemy->ResolvePlayerContact(Player));
+        Test->TestTrue(TEXT("Defeated patrol enemy is destroyed"),
+            Enemy->IsActorBeingDestroyed());
+    }
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
     FScrapDashLevelRuntimeAssemblyTest,
     "ScrapDash.Level1.RuntimeAssembly",
@@ -168,6 +255,10 @@ bool FScrapDashLevelRuntimeAssemblyTest::RunTest(const FString& Parameters)
     ADD_LATENT_AUTOMATION_COMMAND(FStartPIECommand(false));
     ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(1.0f));
     ADD_LATENT_AUTOMATION_COMMAND(FVerifyScrapDashRuntimeAssembly(this));
+    ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(1.0f));
+    ADD_LATENT_AUTOMATION_COMMAND(FVerifyEnemyDangerousContact(this));
+    ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(1.0f));
+    ADD_LATENT_AUTOMATION_COMMAND(FVerifyDashCombat(this));
     ADD_LATENT_AUTOMATION_COMMAND(FEndPlayMapCommand());
     return true;
 }

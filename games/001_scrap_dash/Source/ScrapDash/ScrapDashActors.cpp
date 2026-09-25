@@ -85,14 +85,16 @@ AScrapHazard::AScrapHazard()
     Visual->SetStaticMesh(LoadCube());
 }
 
+bool AScrapHazard::ResolvePlayerContact(AScrapDashCharacter* Player)
+{
+    return Player && Player->Die();
+}
+
 void AScrapHazard::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
     const FHitResult& SweepResult)
 {
-    if (AScrapDashCharacter* Player = Cast<AScrapDashCharacter>(OtherActor))
-    {
-        Player->Die();
-    }
+    ResolvePlayerContact(Cast<AScrapDashCharacter>(OtherActor));
 }
 
 AScrapEnemy::AScrapEnemy()
@@ -133,19 +135,28 @@ void AScrapEnemy::Tick(float DeltaSeconds)
     SetActorLocation(Location);
 }
 
+bool AScrapEnemy::ResolvePlayerContact(AScrapDashCharacter* Player)
+{
+    if (!Player)
+    {
+        return false;
+    }
+
+    if (Player->IsDashAttacking())
+    {
+        Destroy();
+        return true;
+    }
+
+    Player->Die();
+    return false;
+}
+
 void AScrapEnemy::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
     const FHitResult& SweepResult)
 {
-    if (AScrapDashCharacter* Player = Cast<AScrapDashCharacter>(OtherActor))
-    {
-        if (FMath::Abs(Player->GetVelocity().X) >= 1100.0f)
-        {
-            Destroy();
-            return;
-        }
-        Player->Die();
-    }
+    ResolvePlayerContact(Cast<AScrapDashCharacter>(OtherActor));
 }
 
 AScrapMovingPlatform::AScrapMovingPlatform()

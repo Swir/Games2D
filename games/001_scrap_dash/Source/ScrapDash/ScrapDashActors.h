@@ -39,6 +39,7 @@ class SCRAPDASH_API AScrapHazard : public AActor
     GENERATED_BODY()
 public:
     AScrapHazard();
+    bool ResolvePlayerContact(AScrapDashCharacter* Player);
 private:
     UFUNCTION()
     void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -59,6 +60,7 @@ class SCRAPDASH_API AScrapEnemy : public AActor
 public:
     AScrapEnemy();
     virtual void Tick(float DeltaSeconds) override;
+    bool ResolvePlayerContact(AScrapDashCharacter* Player);
 protected:
     virtual void BeginPlay() override;
 private:
