@@ -93,9 +93,23 @@ def main() -> int:
     )
     must_contain(
         "scripts/Build-Win64.ps1",
+        "$ProjectRoot = Split-Path -Parent $PSScriptRoot",
         "BuildCookRun",
         "-platform=Win64",
         "ScrapDash.exe",
+    )
+    must_contain(
+        "scripts/Run-Editor.ps1",
+        "$ProjectRoot = Split-Path -Parent $PSScriptRoot",
+        "UnrealEditor.exe",
+    )
+    must_contain(
+        "scripts/Test-Unreal.ps1",
+        "$ProjectRoot = Split-Path -Parent $PSScriptRoot",
+        "ScrapDashEditor",
+        "Automation RunTests ScrapDash",
+        "UnrealEditor-Cmd.exe",
+        "ReportExportPath",
     )
 
     forbidden = {"Assets", "Packages", "ProjectSettings"}
