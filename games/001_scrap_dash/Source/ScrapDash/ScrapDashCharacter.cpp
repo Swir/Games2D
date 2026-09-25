@@ -255,7 +255,7 @@ void AScrapDashCharacter::RestartCheckpoint(const FInputActionValue& Value)
 
     if (AScrapDashGameMode* Mode = GetWorld()->GetAuthGameMode<AScrapDashGameMode>())
     {
-        Mode->RespawnPlayer(this);
+        Mode->RespawnPlayer(this, false);
     }
 }
 
@@ -281,12 +281,31 @@ void AScrapDashCharacter::RespawnAt(const FVector& WorldLocation)
     JumpBufferedUntil = -1000.0f;
     DashReadyTime = 0.0f;
     bDashAvailable = true;
+    RespawnGuard.Arm(GetWorld()->GetTimeSeconds(), RespawnProtectionSeconds);
+}
+
+bool AScrapDashCharacter::IsRespawnProtected() const
+{
+    return GetWorld() && !RespawnGuard.CanReceiveLethalHit(GetWorld()->GetTimeSeconds());
 }
 
 void AScrapDashCharacter::Die()
 {
+    if (!GetWorld())
+    {
+        return;
+    }
+
+    const float Now = GetWorld()->GetTimeSeconds();
+    if (!RespawnGuard.CanReceiveLethalHit(Now))
+    {
+        return;
+    }
+
+    // Arm immediately so overlapping hazard/enemy callbacks cannot count more than one death.
+    RespawnGuard.Arm(Now, RespawnProtectionSeconds);
     if (AScrapDashGameMode* Mode = GetWorld()->GetAuthGameMode<AScrapDashGameMode>())
     {
-        Mode->RespawnPlayer(this);
+        Mode->RespawnPlayer(this, true);
     }
 }

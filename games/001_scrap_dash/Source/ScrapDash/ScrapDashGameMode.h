@@ -19,7 +19,7 @@ public:
     void RegisterScrap();
     void CollectScrap();
     void SetCheckpoint(const FVector& WorldLocation);
-    void RespawnPlayer(AScrapDashCharacter* Player);
+    void RespawnPlayer(AScrapDashCharacter* Player, bool bCountAsDeath = true);
     bool TryCompleteLevel();
 
     int32 GetCollectedScrap() const { return CollectedScrap; }

@@ -11,6 +11,22 @@ class UStaticMeshComponent;
 class UInputAction;
 class UInputMappingContext;
 
+struct FScrapRespawnGuard
+{
+    void Arm(const float CurrentTime, const float Duration)
+    {
+        ProtectedUntil = CurrentTime + FMath::Max(0.0f, Duration);
+    }
+
+    bool CanReceiveLethalHit(const float CurrentTime) const
+    {
+        return CurrentTime >= ProtectedUntil;
+    }
+
+private:
+    float ProtectedUntil = -1000000.0f;
+};
+
 UCLASS()
 class SCRAPDASH_API AScrapDashCharacter : public ACharacter
 {
@@ -24,6 +40,7 @@ public:
 
     void RespawnAt(const FVector& WorldLocation);
     void Die();
+    bool IsRespawnProtected() const;
 
 protected:
     virtual void BeginPlay() override;
@@ -87,9 +104,13 @@ private:
     UPROPERTY(EditDefaultsOnly, Category="SCRAP DASH|Movement")
     float JumpBufferTime = 0.16f;
 
+    UPROPERTY(EditDefaultsOnly, Category="SCRAP DASH|Recovery")
+    float RespawnProtectionSeconds = 0.75f;
+
     UPROPERTY(EditDefaultsOnly, Category="SCRAP DASH|Movement")
     float KillZ = -800.0f;
 
+    FScrapRespawnGuard RespawnGuard;
     bool bInputMapInstalled = false;
     bool bDashAvailable = true;
     float LastGroundedTime = -1000.0f;

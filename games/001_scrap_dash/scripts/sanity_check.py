@@ -46,6 +46,9 @@ def main() -> int:
         "Gamepad_FaceButton_Right",
         "FullscreenAction",
         "UGameUserSettings",
+        "RespawnGuard.Arm",
+        "RespawnPlayer(this, false)",
+        "CanReceiveLethalHit",
     )
     must_contain(
         "Source/ScrapDash/ScrapDashActors.cpp",
@@ -65,6 +68,13 @@ def main() -> int:
         "RegisterScrap",
         "TryCompleteLevel",
         "RespawnPlayer",
+        "bCountAsDeath",
+    )
+    must_contain(
+        "Source/ScrapDash/ScrapDashRespawnTests.cpp",
+        "ScrapDash.Gameplay.RespawnGuard",
+        "Protected immediately after respawn",
+        "Protection expires at the configured boundary",
     )
     must_contain(
         "Config/DefaultGame.ini",

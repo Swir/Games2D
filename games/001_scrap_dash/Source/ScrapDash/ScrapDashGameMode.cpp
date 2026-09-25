@@ -45,14 +45,17 @@ void AScrapDashGameMode::SetCheckpoint(const FVector& WorldLocation)
     CheckpointLocation = WorldLocation;
 }
 
-void AScrapDashGameMode::RespawnPlayer(AScrapDashCharacter* Player)
+void AScrapDashGameMode::RespawnPlayer(AScrapDashCharacter* Player, const bool bCountAsDeath)
 {
     if (!Player || bLevelComplete)
     {
         return;
     }
 
-    ++DeathCount;
+    if (bCountAsDeath)
+    {
+        ++DeathCount;
+    }
     Player->RespawnAt(CheckpointLocation);
 }
 
