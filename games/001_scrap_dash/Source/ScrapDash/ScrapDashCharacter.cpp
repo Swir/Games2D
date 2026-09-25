@@ -305,6 +305,7 @@ void AScrapDashCharacter::ToggleFullscreen(const FInputActionValue& Value)
 
 void AScrapDashCharacter::RespawnAt(const FVector& WorldLocation)
 {
+    SetBase(nullptr);
     SetActorLocation(WorldLocation, false, nullptr, ETeleportType::TeleportPhysics);
     GetCharacterMovement()->StopMovementImmediately();
     GetCharacterMovement()->SetMovementMode(MOVE_Walking);

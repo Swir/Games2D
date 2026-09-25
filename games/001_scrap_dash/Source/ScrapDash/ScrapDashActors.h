@@ -7,6 +7,7 @@
 
 class AScrapDashCharacter;
 class UBoxComponent;
+class USceneComponent;
 class USphereComponent;
 class UStaticMeshComponent;
 
@@ -89,11 +90,32 @@ class SCRAPDASH_API AScrapMovingPlatform : public AActor
 public:
     AScrapMovingPlatform();
     virtual void Tick(float DeltaSeconds) override;
+
+    void AttachRider(AScrapDashCharacter* Player);
+    void DetachRider(AScrapDashCharacter* Player);
+    bool IsCarrying(const AScrapDashCharacter* Player) const;
+
 protected:
     virtual void BeginPlay() override;
+
 private:
+    UFUNCTION()
+    void OnRiderEnter(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+        const FHitResult& SweepResult);
+
+    UFUNCTION()
+    void OnRiderExit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<USceneComponent> SceneRoot;
+
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UStaticMeshComponent> PlatformMesh;
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UBoxComponent> RiderTrigger;
 
     FVector Origin = FVector::ZeroVector;
     float RuntimeSeconds = 0.0f;

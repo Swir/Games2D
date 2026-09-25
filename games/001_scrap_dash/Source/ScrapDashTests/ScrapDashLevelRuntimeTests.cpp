@@ -87,6 +87,12 @@ bool FVerifyScrapDashRuntimeAssembly::Update()
     {
         Test->TestTrue(TEXT("Moving platform travels during runtime"),
             !MovingPlatform->GetActorLocation().Equals(FVector(1360.0f, 0.0f, 150.0f), 5.0f));
+        if (Player)
+        {
+            MovingPlatform->AttachRider(Player);
+            Test->TestTrue(TEXT("Moving platform establishes a movement base"),
+                MovingPlatform->IsCarrying(Player));
+        }
     }
 
     AScrapEnemy* PatrolEnemy = nullptr;
@@ -130,6 +136,8 @@ bool FVerifyScrapDashRuntimeAssembly::Update()
             Mode->GetDeathCount(), DeathsBeforeRespawn + 1);
         Test->TestTrue(TEXT("Checkpoint controls the real respawn location"),
             Player->GetActorLocation().Equals(RuntimeCheckpoint, 1.0f));
+        Test->TestNull(TEXT("Respawn detaches the player from the cart"),
+            Player->GetMovementBase());
     }
 
     if (Mode)

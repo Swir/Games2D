@@ -1,6 +1,7 @@
 #include "ScrapDashActors.h"
 
 #include "Components/BoxComponent.h"
+#include "Components/SceneComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMeshActor.h"
@@ -151,12 +152,25 @@ AScrapMovingPlatform::AScrapMovingPlatform()
 {
     PrimaryActorTick.bCanEverTick = true;
 
+    SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    RootComponent = SceneRoot;
+
     PlatformMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Platform"));
-    RootComponent = PlatformMesh;
+    PlatformMesh->SetupAttachment(SceneRoot);
     PlatformMesh->SetStaticMesh(LoadCube());
     PlatformMesh->SetCollisionProfileName(TEXT("BlockAll"));
     PlatformMesh->SetMobility(EComponentMobility::Movable);
     PlatformMesh->SetRelativeScale3D(FVector(2.2f, 1.0f, 0.28f));
+
+    RiderTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("RiderTrigger"));
+    RiderTrigger->SetupAttachment(SceneRoot);
+    RiderTrigger->SetBoxExtent(FVector(220.0f, 90.0f, 70.0f));
+    RiderTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 72.0f));
+    RiderTrigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    RiderTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
+    RiderTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    RiderTrigger->OnComponentBeginOverlap.AddDynamic(this, &AScrapMovingPlatform::OnRiderEnter);
+    RiderTrigger->OnComponentEndOverlap.AddDynamic(this, &AScrapMovingPlatform::OnRiderExit);
 }
 
 void AScrapMovingPlatform::BeginPlay()
@@ -173,6 +187,40 @@ void AScrapMovingPlatform::Tick(float DeltaSeconds)
     FVector Location = Origin;
     Location.X += FMath::Sin(RuntimeSeconds * TravelSpeed) * TravelDistance;
     SetActorLocation(Location, true);
+}
+
+void AScrapMovingPlatform::AttachRider(AScrapDashCharacter* Player)
+{
+    if (Player)
+    {
+        Player->SetBase(PlatformMesh);
+    }
+}
+
+void AScrapMovingPlatform::DetachRider(AScrapDashCharacter* Player)
+{
+    if (Player && Player->GetMovementBase() == PlatformMesh)
+    {
+        Player->SetBase(nullptr);
+    }
+}
+
+bool AScrapMovingPlatform::IsCarrying(const AScrapDashCharacter* Player) const
+{
+    return Player && Player->GetMovementBase() == PlatformMesh;
+}
+
+void AScrapMovingPlatform::OnRiderEnter(UPrimitiveComponent* OverlappedComponent,
+    AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+    bool bFromSweep, const FHitResult& SweepResult)
+{
+    AttachRider(Cast<AScrapDashCharacter>(OtherActor));
+}
+
+void AScrapMovingPlatform::OnRiderExit(UPrimitiveComponent* OverlappedComponent,
+    AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    DetachRider(Cast<AScrapDashCharacter>(OtherActor));
 }
 
 AScrapMagnetZone::AScrapMagnetZone()
