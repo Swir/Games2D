@@ -1,7 +1,7 @@
 param([string]$EngineRoot = $env:UE_ROOT)
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$ProjectRoot = Split-Path -Parent $PSScriptRoot
 $ProjectFile = Join-Path $ProjectRoot "ScrapDash.uproject"
 
 if ([string]::IsNullOrWhiteSpace($EngineRoot)) {

@@ -25,8 +25,46 @@ def main() -> int:
     modules = {item["Name"] for item in project.get("Modules", [])}
     plugins = {item["Name"] for item in project.get("Plugins", []) if item.get("Enabled")}
     assert "ScrapDash" in modules, "ScrapDash runtime module is not declared"
+    assert "ScrapDashTests" in modules, "ScrapDash editor test module is not declared"
     assert "EnhancedInput" in plugins, "Enhanced Input plugin must be enabled"
 
+    must_contain(
+        "Source/ScrapDashEditor.Target.cs",
+        '"ScrapDash"',
+        '"ScrapDashTests"',
+    )
+    must_contain(
+        "Source/ScrapDashTests/ScrapDashTests.Build.cs",
+        '"ScrapDash"',
+        '"UnrealEd"',
+    )
+    must_contain(
+        "Source/ScrapDashTests/ScrapDashLevelRuntimeTests.cpp",
+        "ScrapDash.Level1.RuntimeAssembly",
+        "FStartPIECommand(false)",
+        "GEditor->PlayWorld",
+        "Player is possessed in PIE",
+        "Moving platform travels during runtime",
+        "Moving platform establishes a movement base",
+        "Respawn detaches the player from the cart",
+        "Hazard contact is lethal",
+        "Patrol enemy contact is lethal",
+        "Directional dash starts in runtime",
+        "Dash opens its attack window",
+        "Dash defeats the patrol enemy",
+        "Patrol enemy moves during runtime",
+        "Magnet Lift captures the player",
+        "Magnet Lift applies sustained upward velocity",
+        "Magnet Lift centers the player toward its route",
+        "Checkpoint controls the real respawn location",
+        "Five scrap collectibles spawn",
+        "Moving platform section spawns",
+        "Magnet Lift spawns",
+        "Checkpoint spawns",
+        "Finish gate spawns",
+        "TryCompleteLevel",
+        "Enhanced Input installs after possession",
+    )
     must_contain(
         "Source/ScrapDash/ScrapDash.Build.cs",
         '"EnhancedInput"',
@@ -41,11 +79,24 @@ def main() -> int:
         "JumpBufferedUntil",
         "CoyoteTime",
         "DashStarted",
+        "TryStartDash",
+        "DashAttackUntil",
+        "IsDashAttacking",
         "Gamepad_LeftX",
         "Gamepad_FaceButton_Bottom",
         "Gamepad_FaceButton_Right",
         "FullscreenAction",
         "UGameUserSettings",
+        "RespawnGuard.Arm",
+        "RespawnPlayer(this, false)",
+        "SetBase(nullptr)",
+        "CanReceiveLethalHit",
+        "PossessedBy",
+        "OnRep_Controller",
+        "bRuntimeMappingsBuilt",
+        "bInputMapInstalled = true",
+        "GetCurrentLevelName(this, true)",
+        "OpenLevel",
     )
     must_contain(
         "Source/ScrapDash/ScrapDashActors.cpp",
@@ -56,7 +107,18 @@ def main() -> int:
         "AScrapMagnetZone",
         "AScrapCheckpoint",
         "AScrapFinishGate",
-        "GetVelocity().X",
+        "ResolvePlayerContact",
+        "IsDashAttacking",
+        "SetActorLocation(Location, true)",
+        "RiderTrigger",
+        "SetCollisionResponseToChannel(ECC_Pawn",
+        "AttachRider",
+        "SetBase(PlatformMesh)",
+        "GetMovementBase() == PlatformMesh",
+        "OnComponentEndOverlap",
+        "EngagePlayer",
+        "TargetHorizontalSpeed",
+        "Velocity.Z = FMath::Max",
         "Closing Time Circuit",
     )
     must_contain(
@@ -65,6 +127,31 @@ def main() -> int:
         "RegisterScrap",
         "TryCompleteLevel",
         "RespawnPlayer",
+        "bCountAsDeath",
+        "PC->Possess(Player)",
+        "Objective.IsExitReady()",
+        "Objective.RegisterScrap()",
+        "Objective.CollectScrap()",
+    )
+    must_contain(
+        "Source/ScrapDash/ScrapDashRespawnTests.cpp",
+        "ScrapDash.Gameplay.RespawnGuard",
+        "Protected immediately after respawn",
+        "Protection expires at the configured boundary",
+    )
+    must_contain(
+        "Source/ScrapDash/ScrapDashObjectiveTests.cpp",
+        "ScrapDash.Gameplay.ObjectiveProgress",
+        "Five registered scraps remain required",
+        "Exit becomes ready after all five scraps",
+    )
+    must_contain(
+        "Source/ScrapDash/ScrapDashHUD.cpp",
+        "OBJECTIVE  RECOVER %d MORE SCRAP",
+        "OBJECTIVE  EXIT POWERED",
+        "GetRemainingScrap",
+        "PAUSE  Esc/Menu",
+        "PRESS R / Y TO REPLAY",
     )
     must_contain(
         "Config/DefaultGame.ini",
@@ -83,9 +170,23 @@ def main() -> int:
     )
     must_contain(
         "scripts/Build-Win64.ps1",
+        "$ProjectRoot = Split-Path -Parent $PSScriptRoot",
         "BuildCookRun",
         "-platform=Win64",
         "ScrapDash.exe",
+    )
+    must_contain(
+        "scripts/Run-Editor.ps1",
+        "$ProjectRoot = Split-Path -Parent $PSScriptRoot",
+        "UnrealEditor.exe",
+    )
+    must_contain(
+        "scripts/Test-Unreal.ps1",
+        "$ProjectRoot = Split-Path -Parent $PSScriptRoot",
+        "ScrapDashEditor",
+        "Automation RunTests ScrapDash",
+        "UnrealEditor-Cmd.exe",
+        "ReportExportPath",
     )
 
     forbidden = {"Assets", "Packages", "ProjectSettings"}

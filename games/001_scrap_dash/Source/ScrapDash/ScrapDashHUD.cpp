@@ -29,7 +29,15 @@ void AScrapDashHUD::DrawHUD()
     DrawText(DeathLine, FLinearColor(1.0f, 0.78f, 0.16f), 34.0f, 60.0f,
         GEngine->GetSmallFont(), 1.0f, false);
 
-    DrawText(TEXT("MOVE  A/D or Left Stick    JUMP  Space/A    DASH  Shift/B    RESTART  R/Y    FULLSCREEN  F11"),
+    const FString ObjectiveLine = Mode->IsExitReady()
+        ? TEXT("OBJECTIVE  EXIT POWERED — REACH THE GATE")
+        : FString::Printf(TEXT("OBJECTIVE  RECOVER %d MORE SCRAP"), Mode->GetRemainingScrap());
+    DrawText(ObjectiveLine, Mode->IsExitReady()
+            ? FLinearColor(0.38f, 0.90f, 1.0f)
+            : FLinearColor(1.0f, 0.78f, 0.16f),
+        34.0f, 88.0f, GEngine->GetSmallFont(), 1.0f, false);
+
+    DrawText(TEXT("MOVE  A/D or Left Stick    JUMP  Space/A    DASH  Shift/B    PAUSE  Esc/Menu    RESTART  R/Y    FULLSCREEN  F11"),
         FLinearColor(0.72f, 0.78f, 0.85f), 34.0f, Canvas->ClipY - 42.0f,
         GEngine->GetSmallFont(), 0.85f, false);
 
@@ -49,6 +57,10 @@ void AScrapDashHUD::DrawHUD()
         DrawText(TEXT("All scrap recovered. Demo vertical slice cleared."),
             FLinearColor::White,
             Canvas->ClipX * 0.5f - 220.0f, Canvas->ClipY * 0.50f,
+            GEngine->GetMediumFont(), 1.0f, false);
+        DrawText(TEXT("PRESS R / Y TO REPLAY"),
+            FLinearColor(1.0f, 0.78f, 0.16f),
+            Canvas->ClipX * 0.5f - 120.0f, Canvas->ClipY * 0.57f,
             GEngine->GetMediumFont(), 1.0f, false);
     }
 }

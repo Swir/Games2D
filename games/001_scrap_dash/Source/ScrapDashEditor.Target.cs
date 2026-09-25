@@ -8,6 +8,6 @@ public class ScrapDashEditorTarget : TargetRules
         Type = TargetType.Editor;
         DefaultBuildSettings = BuildSettingsVersion.Latest;
         IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
-        ExtraModuleNames.Add("ScrapDash");
+        ExtraModuleNames.AddRange(new[] { "ScrapDash", "ScrapDashTests" });
     }
 }

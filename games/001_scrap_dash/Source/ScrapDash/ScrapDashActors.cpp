@@ -1,9 +1,11 @@
 #include "ScrapDashActors.h"
 
 #include "Components/BoxComponent.h"
+#include "Components/SceneComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMeshActor.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "ScrapDashCharacter.h"
 #include "ScrapDashGameMode.h"
 
@@ -83,14 +85,16 @@ AScrapHazard::AScrapHazard()
     Visual->SetStaticMesh(LoadCube());
 }
 
+bool AScrapHazard::ResolvePlayerContact(AScrapDashCharacter* Player)
+{
+    return Player && Player->Die();
+}
+
 void AScrapHazard::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
     const FHitResult& SweepResult)
 {
-    if (AScrapDashCharacter* Player = Cast<AScrapDashCharacter>(OtherActor))
-    {
-        Player->Die();
-    }
+    ResolvePlayerContact(Cast<AScrapDashCharacter>(OtherActor));
 }
 
 AScrapEnemy::AScrapEnemy()
@@ -131,31 +135,53 @@ void AScrapEnemy::Tick(float DeltaSeconds)
     SetActorLocation(Location);
 }
 
+bool AScrapEnemy::ResolvePlayerContact(AScrapDashCharacter* Player)
+{
+    if (!Player)
+    {
+        return false;
+    }
+
+    if (Player->IsDashAttacking())
+    {
+        Destroy();
+        return true;
+    }
+
+    Player->Die();
+    return false;
+}
+
 void AScrapEnemy::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
     const FHitResult& SweepResult)
 {
-    if (AScrapDashCharacter* Player = Cast<AScrapDashCharacter>(OtherActor))
-    {
-        if (FMath::Abs(Player->GetVelocity().X) >= 1100.0f)
-        {
-            Destroy();
-            return;
-        }
-        Player->Die();
-    }
+    ResolvePlayerContact(Cast<AScrapDashCharacter>(OtherActor));
 }
 
 AScrapMovingPlatform::AScrapMovingPlatform()
 {
     PrimaryActorTick.bCanEverTick = true;
 
+    SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    RootComponent = SceneRoot;
+
     PlatformMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Platform"));
-    RootComponent = PlatformMesh;
+    PlatformMesh->SetupAttachment(SceneRoot);
     PlatformMesh->SetStaticMesh(LoadCube());
     PlatformMesh->SetCollisionProfileName(TEXT("BlockAll"));
     PlatformMesh->SetMobility(EComponentMobility::Movable);
     PlatformMesh->SetRelativeScale3D(FVector(2.2f, 1.0f, 0.28f));
+
+    RiderTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("RiderTrigger"));
+    RiderTrigger->SetupAttachment(SceneRoot);
+    RiderTrigger->SetBoxExtent(FVector(220.0f, 90.0f, 70.0f));
+    RiderTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 72.0f));
+    RiderTrigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    RiderTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
+    RiderTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    RiderTrigger->OnComponentBeginOverlap.AddDynamic(this, &AScrapMovingPlatform::OnRiderEnter);
+    RiderTrigger->OnComponentEndOverlap.AddDynamic(this, &AScrapMovingPlatform::OnRiderExit);
 }
 
 void AScrapMovingPlatform::BeginPlay()
@@ -171,18 +197,54 @@ void AScrapMovingPlatform::Tick(float DeltaSeconds)
     RuntimeSeconds += DeltaSeconds;
     FVector Location = Origin;
     Location.X += FMath::Sin(RuntimeSeconds * TravelSpeed) * TravelDistance;
-    SetActorLocation(Location);
+    SetActorLocation(Location, true);
+}
+
+void AScrapMovingPlatform::AttachRider(AScrapDashCharacter* Player)
+{
+    if (Player)
+    {
+        Player->SetBase(PlatformMesh);
+    }
+}
+
+void AScrapMovingPlatform::DetachRider(AScrapDashCharacter* Player)
+{
+    if (Player && Player->GetMovementBase() == PlatformMesh)
+    {
+        Player->SetBase(nullptr);
+    }
+}
+
+bool AScrapMovingPlatform::IsCarrying(const AScrapDashCharacter* Player) const
+{
+    return Player && Player->GetMovementBase() == PlatformMesh;
+}
+
+void AScrapMovingPlatform::OnRiderEnter(UPrimitiveComponent* OverlappedComponent,
+    AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+    bool bFromSweep, const FHitResult& SweepResult)
+{
+    AttachRider(Cast<AScrapDashCharacter>(OtherActor));
+}
+
+void AScrapMovingPlatform::OnRiderExit(UPrimitiveComponent* OverlappedComponent,
+    AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    DetachRider(Cast<AScrapDashCharacter>(OtherActor));
 }
 
 AScrapMagnetZone::AScrapMagnetZone()
 {
-    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.TickGroup = TG_PrePhysics;
 
     Trigger = CreateDefaultSubobject<UBoxComponent>(TEXT("Trigger"));
     RootComponent = Trigger;
     Trigger->SetBoxExtent(FVector(130.0f, 90.0f, 170.0f));
     Trigger->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
     Trigger->OnComponentBeginOverlap.AddDynamic(this, &AScrapMagnetZone::OnOverlap);
+    Trigger->OnComponentEndOverlap.AddDynamic(this, &AScrapMagnetZone::OnEndOverlap);
 
     Visual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Visual"));
     Visual->SetupAttachment(RootComponent);
@@ -191,13 +253,50 @@ AScrapMagnetZone::AScrapMagnetZone()
     Visual->SetStaticMesh(LoadCube());
 }
 
+void AScrapMagnetZone::EngagePlayer(AScrapDashCharacter* Player)
+{
+    ActivePlayer = Player;
+}
+
+void AScrapMagnetZone::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+
+    AScrapDashCharacter* Player = ActivePlayer.Get();
+    if (!Player)
+    {
+        return;
+    }
+
+    UCharacterMovementComponent* Movement = Player->GetCharacterMovement();
+    FVector Velocity = Movement->Velocity;
+    const float HorizontalError = GetActorLocation().X - Player->GetActorLocation().X;
+    const float TargetHorizontalSpeed = FMath::Clamp(
+        HorizontalError * CenteringStrength, -MaxCenteringSpeed, MaxCenteringSpeed);
+
+    Velocity.X = FMath::FInterpTo(
+        Velocity.X, TargetHorizontalSpeed, DeltaSeconds, CenteringStrength);
+    Velocity.Y = 0.0f;
+    Velocity.Z = FMath::Max(Velocity.Z, LiftVelocity);
+    Movement->Velocity = Velocity;
+}
+
 void AScrapMagnetZone::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
     const FHitResult& SweepResult)
 {
     if (AScrapDashCharacter* Player = Cast<AScrapDashCharacter>(OtherActor))
     {
-        Player->LaunchCharacter(FVector(0.0f, 0.0f, LiftVelocity), false, true);
+        EngagePlayer(Player);
+    }
+}
+
+void AScrapMagnetZone::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    if (OtherActor == ActivePlayer.Get())
+    {
+        ActivePlayer.Reset();
     }
 }
 

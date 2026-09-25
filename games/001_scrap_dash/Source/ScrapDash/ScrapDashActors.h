@@ -5,7 +5,9 @@
 #include "Engine/World.h"
 #include "ScrapDashActors.generated.h"
 
+class AScrapDashCharacter;
 class UBoxComponent;
+class USceneComponent;
 class USphereComponent;
 class UStaticMeshComponent;
 
@@ -37,6 +39,7 @@ class SCRAPDASH_API AScrapHazard : public AActor
     GENERATED_BODY()
 public:
     AScrapHazard();
+    bool ResolvePlayerContact(AScrapDashCharacter* Player);
 private:
     UFUNCTION()
     void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -57,6 +60,7 @@ class SCRAPDASH_API AScrapEnemy : public AActor
 public:
     AScrapEnemy();
     virtual void Tick(float DeltaSeconds) override;
+    bool ResolvePlayerContact(AScrapDashCharacter* Player);
 protected:
     virtual void BeginPlay() override;
 private:
@@ -88,11 +92,32 @@ class SCRAPDASH_API AScrapMovingPlatform : public AActor
 public:
     AScrapMovingPlatform();
     virtual void Tick(float DeltaSeconds) override;
+
+    void AttachRider(AScrapDashCharacter* Player);
+    void DetachRider(AScrapDashCharacter* Player);
+    bool IsCarrying(const AScrapDashCharacter* Player) const;
+
 protected:
     virtual void BeginPlay() override;
+
 private:
+    UFUNCTION()
+    void OnRiderEnter(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+        const FHitResult& SweepResult);
+
+    UFUNCTION()
+    void OnRiderExit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<USceneComponent> SceneRoot;
+
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UStaticMeshComponent> PlatformMesh;
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UBoxComponent> RiderTrigger;
 
     FVector Origin = FVector::ZeroVector;
     float RuntimeSeconds = 0.0f;
@@ -110,11 +135,20 @@ class SCRAPDASH_API AScrapMagnetZone : public AActor
     GENERATED_BODY()
 public:
     AScrapMagnetZone();
+    virtual void Tick(float DeltaSeconds) override;
+
+    void EngagePlayer(AScrapDashCharacter* Player);
+    bool HasCapturedPlayer() const { return ActivePlayer.IsValid(); }
+
 private:
     UFUNCTION()
     void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
         const FHitResult& SweepResult);
+
+    UFUNCTION()
+    void OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UBoxComponent> Trigger;
@@ -124,6 +158,14 @@ private:
 
     UPROPERTY(EditAnywhere, Category="SCRAP DASH")
     float LiftVelocity = 1280.0f;
+
+    UPROPERTY(EditAnywhere, Category="SCRAP DASH")
+    float CenteringStrength = 5.0f;
+
+    UPROPERTY(EditAnywhere, Category="SCRAP DASH")
+    float MaxCenteringSpeed = 420.0f;
+
+    TWeakObjectPtr<AScrapDashCharacter> ActivePlayer;
 };
 
 UCLASS()

@@ -9,6 +9,20 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Compile and run Unreal automation tests
+        shell: pwsh
+        run: |
+          $report = Join-Path $env:RUNNER_TEMP 'ScrapDashAutomation'
+          .\games\001_scrap_dash\scripts\Test-Unreal.ps1 -ReportDir $report
+
+      - name: Upload Unreal automation report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: SCRAP-DASH-Unreal-Automation
+          path: ${{ runner.temp }}\ScrapDashAutomation
+          if-no-files-found: warn
+
       - name: Build and package SCRAP DASH
         shell: pwsh
         run: |

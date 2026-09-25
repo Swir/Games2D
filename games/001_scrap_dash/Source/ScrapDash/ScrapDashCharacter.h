@@ -11,6 +11,22 @@ class UStaticMeshComponent;
 class UInputAction;
 class UInputMappingContext;
 
+struct FScrapRespawnGuard
+{
+    void Arm(const float CurrentTime, const float Duration)
+    {
+        ProtectedUntil = CurrentTime + FMath::Max(0.0f, Duration);
+    }
+
+    bool CanReceiveLethalHit(const float CurrentTime) const
+    {
+        return CurrentTime >= ProtectedUntil;
+    }
+
+private:
+    float ProtectedUntil = -1000000.0f;
+};
+
 UCLASS()
 class SCRAPDASH_API AScrapDashCharacter : public ACharacter
 {
@@ -21,9 +37,15 @@ public:
 
     virtual void Tick(float DeltaSeconds) override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+    virtual void PossessedBy(AController* NewController) override;
+    virtual void OnRep_Controller() override;
 
     void RespawnAt(const FVector& WorldLocation);
-    void Die();
+    bool Die();
+    bool TryStartDash(float Direction);
+    bool IsDashAttacking() const;
+    bool IsRespawnProtected() const;
+    bool IsRuntimeInputInstalled() const { return bInputMapInstalled; }
 
 protected:
     virtual void BeginPlay() override;
@@ -82,18 +104,27 @@ private:
     float DashCooldown = 0.35f;
 
     UPROPERTY(EditDefaultsOnly, Category="SCRAP DASH|Movement")
+    float DashAttackDuration = 0.18f;
+
+    UPROPERTY(EditDefaultsOnly, Category="SCRAP DASH|Movement")
     float CoyoteTime = 0.14f;
 
     UPROPERTY(EditDefaultsOnly, Category="SCRAP DASH|Movement")
     float JumpBufferTime = 0.16f;
 
+    UPROPERTY(EditDefaultsOnly, Category="SCRAP DASH|Recovery")
+    float RespawnProtectionSeconds = 0.75f;
+
     UPROPERTY(EditDefaultsOnly, Category="SCRAP DASH|Movement")
     float KillZ = -800.0f;
 
+    FScrapRespawnGuard RespawnGuard;
+    bool bRuntimeMappingsBuilt = false;
     bool bInputMapInstalled = false;
     bool bDashAvailable = true;
     float LastGroundedTime = -1000.0f;
     float JumpBufferedUntil = -1000.0f;
     float DashReadyTime = 0.0f;
+    float DashAttackUntil = -1000.0f;
     float LastMoveDirection = 1.0f;
 };
