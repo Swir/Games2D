@@ -23,7 +23,21 @@ void AScrapDashGameMode::BeginPlay()
 
     if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
     {
-        if (AScrapDashCharacter* Player = Cast<AScrapDashCharacter>(PC->GetPawn()))
+        AScrapDashCharacter* Player = Cast<AScrapDashCharacter>(PC->GetPawn());
+        if (!Player)
+        {
+            FActorSpawnParameters PlayerParams;
+            PlayerParams.SpawnCollisionHandlingOverride =
+                ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+            Player = GetWorld()->SpawnActor<AScrapDashCharacter>(
+                AScrapDashCharacter::StaticClass(), CheckpointLocation, FRotator::ZeroRotator, PlayerParams);
+            if (Player)
+            {
+                PC->Possess(Player);
+            }
+        }
+
+        if (Player)
         {
             Player->RespawnAt(CheckpointLocation);
         }
@@ -32,12 +46,12 @@ void AScrapDashGameMode::BeginPlay()
 
 void AScrapDashGameMode::RegisterScrap()
 {
-    ++TotalScrap;
+    Objective.RegisterScrap();
 }
 
 void AScrapDashGameMode::CollectScrap()
 {
-    CollectedScrap = FMath::Clamp(CollectedScrap + 1, 0, TotalScrap);
+    Objective.CollectScrap();
 }
 
 void AScrapDashGameMode::SetCheckpoint(const FVector& WorldLocation)
@@ -61,7 +75,7 @@ void AScrapDashGameMode::RespawnPlayer(AScrapDashCharacter* Player, const bool b
 
 bool AScrapDashGameMode::TryCompleteLevel()
 {
-    if (bLevelComplete || TotalScrap <= 0 || CollectedScrap < TotalScrap)
+    if (bLevelComplete || !Objective.IsExitReady())
     {
         return false;
     }

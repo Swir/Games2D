@@ -69,12 +69,28 @@ def main() -> int:
         "TryCompleteLevel",
         "RespawnPlayer",
         "bCountAsDeath",
+        "PC->Possess(Player)",
+        "Objective.IsExitReady()",
+        "Objective.RegisterScrap()",
+        "Objective.CollectScrap()",
     )
     must_contain(
         "Source/ScrapDash/ScrapDashRespawnTests.cpp",
         "ScrapDash.Gameplay.RespawnGuard",
         "Protected immediately after respawn",
         "Protection expires at the configured boundary",
+    )
+    must_contain(
+        "Source/ScrapDash/ScrapDashObjectiveTests.cpp",
+        "ScrapDash.Gameplay.ObjectiveProgress",
+        "Five registered scraps remain required",
+        "Exit becomes ready after all five scraps",
+    )
+    must_contain(
+        "Source/ScrapDash/ScrapDashHUD.cpp",
+        "OBJECTIVE  RECOVER %d MORE SCRAP",
+        "OBJECTIVE  EXIT POWERED",
+        "GetRemainingScrap",
     )
     must_contain(
         "Config/DefaultGame.ini",
