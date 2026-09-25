@@ -41,8 +41,12 @@ def main() -> int:
     must_contain(
         "Source/ScrapDashTests/ScrapDashLevelRuntimeTests.cpp",
         "ScrapDash.Level1.RuntimeAssembly",
-        "FStartPIECommand",
+        "FStartPIECommand(false)",
         "GEditor->PlayWorld",
+        "Player is possessed in PIE",
+        "Moving platform travels during runtime",
+        "Patrol enemy moves during runtime",
+        "Checkpoint controls the real respawn location",
         "Five scrap collectibles spawn",
         "Moving platform section spawns",
         "Magnet Lift spawns",

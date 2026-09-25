@@ -57,6 +57,7 @@ bool FVerifyScrapDashRuntimeAssembly::Update()
         Test->TestEqual(TEXT("Gameplay plane normal is the Y axis"),
             Movement->GetPlaneConstraintNormal(), FVector(0.0f, 1.0f, 0.0f));
         Test->TestNotNull(TEXT("Side camera is attached"), Player->FindComponentByClass<UCameraComponent>());
+        Test->TestNotNull(TEXT("Player is possessed in PIE"), Player->GetController());
         Test->TestTrue(TEXT("Enhanced Input installs after possession"),
             Player->IsRuntimeInputInstalled());
     }
@@ -75,6 +76,42 @@ bool FVerifyScrapDashRuntimeAssembly::Update()
         CountActors<AScrapCheckpoint>(World), 1);
     Test->TestEqual(TEXT("Finish gate spawns"),
         CountActors<AScrapFinishGate>(World), 1);
+
+    AScrapMovingPlatform* MovingPlatform = nullptr;
+    for (TActorIterator<AScrapMovingPlatform> It(World); It; ++It)
+    {
+        MovingPlatform = *It;
+        break;
+    }
+    if (MovingPlatform)
+    {
+        Test->TestTrue(TEXT("Moving platform travels during runtime"),
+            !MovingPlatform->GetActorLocation().Equals(FVector(1360.0f, 0.0f, 150.0f), 5.0f));
+    }
+
+    AScrapEnemy* PatrolEnemy = nullptr;
+    for (TActorIterator<AScrapEnemy> It(World); It; ++It)
+    {
+        PatrolEnemy = *It;
+        break;
+    }
+    if (PatrolEnemy)
+    {
+        Test->TestTrue(TEXT("Patrol enemy moves during runtime"),
+            !PatrolEnemy->GetActorLocation().Equals(FVector(590.0f, 0.0f, 20.0f), 5.0f));
+    }
+
+    if (Mode && Player)
+    {
+        const FVector RuntimeCheckpoint(2090.0f, 0.0f, 635.0f);
+        const int32 DeathsBeforeRespawn = Mode->GetDeathCount();
+        Mode->SetCheckpoint(RuntimeCheckpoint);
+        Player->Die();
+        Test->TestEqual(TEXT("Lethal hit increments reboot count"),
+            Mode->GetDeathCount(), DeathsBeforeRespawn + 1);
+        Test->TestTrue(TEXT("Checkpoint controls the real respawn location"),
+            Player->GetActorLocation().Equals(RuntimeCheckpoint, 1.0f));
+    }
 
     if (Mode)
     {
@@ -101,7 +138,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 bool FScrapDashLevelRuntimeAssemblyTest::RunTest(const FString& Parameters)
 {
     AutomationOpenMap(TEXT("/Engine/Maps/Entry"));
-    ADD_LATENT_AUTOMATION_COMMAND(FStartPIECommand(true));
+    ADD_LATENT_AUTOMATION_COMMAND(FStartPIECommand(false));
     ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(1.0f));
     ADD_LATENT_AUTOMATION_COMMAND(FVerifyScrapDashRuntimeAssembly(this));
     ADD_LATENT_AUTOMATION_COMMAND(FEndPlayMapCommand());
