@@ -49,6 +49,7 @@ def main() -> int:
         "Checkpoint spawns",
         "Finish gate spawns",
         "TryCompleteLevel",
+        "Enhanced Input installs after possession",
     )
     must_contain(
         "Source/ScrapDash/ScrapDash.Build.cs",
@@ -72,6 +73,12 @@ def main() -> int:
         "RespawnGuard.Arm",
         "RespawnPlayer(this, false)",
         "CanReceiveLethalHit",
+        "PossessedBy",
+        "OnRep_Controller",
+        "bRuntimeMappingsBuilt",
+        "bInputMapInstalled = true",
+        "GetCurrentLevelName(this, true)",
+        "OpenLevel",
     )
     must_contain(
         "Source/ScrapDash/ScrapDashActors.cpp",
@@ -114,6 +121,8 @@ def main() -> int:
         "OBJECTIVE  RECOVER %d MORE SCRAP",
         "OBJECTIVE  EXIT POWERED",
         "GetRemainingScrap",
+        "PAUSE  Esc/Menu",
+        "PRESS R / Y TO REPLAY",
     )
     must_contain(
         "Config/DefaultGame.ini",

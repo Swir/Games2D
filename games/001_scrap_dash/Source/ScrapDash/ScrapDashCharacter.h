@@ -37,10 +37,13 @@ public:
 
     virtual void Tick(float DeltaSeconds) override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+    virtual void PossessedBy(AController* NewController) override;
+    virtual void OnRep_Controller() override;
 
     void RespawnAt(const FVector& WorldLocation);
     void Die();
     bool IsRespawnProtected() const;
+    bool IsRuntimeInputInstalled() const { return bInputMapInstalled; }
 
 protected:
     virtual void BeginPlay() override;
@@ -111,6 +114,7 @@ private:
     float KillZ = -800.0f;
 
     FScrapRespawnGuard RespawnGuard;
+    bool bRuntimeMappingsBuilt = false;
     bool bInputMapInstalled = false;
     bool bDashAvailable = true;
     float LastGroundedTime = -1000.0f;

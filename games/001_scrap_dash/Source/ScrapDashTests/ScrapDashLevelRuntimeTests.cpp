@@ -57,6 +57,8 @@ bool FVerifyScrapDashRuntimeAssembly::Update()
         Test->TestEqual(TEXT("Gameplay plane normal is the Y axis"),
             Movement->GetPlaneConstraintNormal(), FVector(0.0f, 1.0f, 0.0f));
         Test->TestNotNull(TEXT("Side camera is attached"), Player->FindComponentByClass<UCameraComponent>());
+        Test->TestTrue(TEXT("Enhanced Input installs after possession"),
+            Player->IsRuntimeInputInstalled());
     }
 
     Test->TestEqual(TEXT("Five scrap collectibles spawn"),

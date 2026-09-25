@@ -94,6 +94,18 @@ void AScrapDashCharacter::BeginPlay()
     InstallRuntimeInputMap();
 }
 
+void AScrapDashCharacter::PossessedBy(AController* NewController)
+{
+    Super::PossessedBy(NewController);
+    InstallRuntimeInputMap();
+}
+
+void AScrapDashCharacter::OnRep_Controller()
+{
+    Super::OnRep_Controller();
+    InstallRuntimeInputMap();
+}
+
 void AScrapDashCharacter::InstallRuntimeInputMap()
 {
     if (bInputMapInstalled || !RuntimeInputContext)
@@ -101,50 +113,62 @@ void AScrapDashCharacter::InstallRuntimeInputMap()
         return;
     }
 
-    auto AddNegativeMove = [this](const FKey& Key)
+    if (!bRuntimeMappingsBuilt)
     {
-        FEnhancedActionKeyMapping& Mapping = RuntimeInputContext->MapKey(MoveAction, Key);
-        Mapping.Modifiers.Add(NewObject<UInputModifierNegate>(RuntimeInputContext));
-    };
-
-    AddNegativeMove(EKeys::A);
-    AddNegativeMove(EKeys::Left);
-    AddNegativeMove(EKeys::Gamepad_DPad_Left);
-
-    RuntimeInputContext->MapKey(MoveAction, EKeys::D);
-    RuntimeInputContext->MapKey(MoveAction, EKeys::Right);
-    RuntimeInputContext->MapKey(MoveAction, EKeys::Gamepad_DPad_Right);
-    RuntimeInputContext->MapKey(MoveAction, EKeys::Gamepad_LeftX);
-
-    RuntimeInputContext->MapKey(JumpAction, EKeys::SpaceBar);
-    RuntimeInputContext->MapKey(JumpAction, EKeys::W);
-    RuntimeInputContext->MapKey(JumpAction, EKeys::Up);
-    RuntimeInputContext->MapKey(JumpAction, EKeys::Gamepad_FaceButton_Bottom);
-
-    RuntimeInputContext->MapKey(DashAction, EKeys::LeftShift);
-    RuntimeInputContext->MapKey(DashAction, EKeys::Gamepad_FaceButton_Right);
-
-    RuntimeInputContext->MapKey(PauseAction, EKeys::Escape);
-    RuntimeInputContext->MapKey(PauseAction, EKeys::Gamepad_Special_Right);
-
-    RuntimeInputContext->MapKey(RestartAction, EKeys::R);
-    RuntimeInputContext->MapKey(RestartAction, EKeys::Gamepad_FaceButton_Top);
-
-    RuntimeInputContext->MapKey(FullscreenAction, EKeys::F11);
-
-    if (APlayerController* PC = Cast<APlayerController>(Controller))
-    {
-        if (ULocalPlayer* LocalPlayer = PC->GetLocalPlayer())
+        auto AddNegativeMove = [this](const FKey& Key)
         {
-            if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-                ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
-            {
-                Subsystem->ClearAllMappings();
-                Subsystem->AddMappingContext(RuntimeInputContext, 0);
-            }
-        }
+            FEnhancedActionKeyMapping& Mapping = RuntimeInputContext->MapKey(MoveAction, Key);
+            Mapping.Modifiers.Add(NewObject<UInputModifierNegate>(RuntimeInputContext));
+        };
+
+        AddNegativeMove(EKeys::A);
+        AddNegativeMove(EKeys::Left);
+        AddNegativeMove(EKeys::Gamepad_DPad_Left);
+
+        RuntimeInputContext->MapKey(MoveAction, EKeys::D);
+        RuntimeInputContext->MapKey(MoveAction, EKeys::Right);
+        RuntimeInputContext->MapKey(MoveAction, EKeys::Gamepad_DPad_Right);
+        RuntimeInputContext->MapKey(MoveAction, EKeys::Gamepad_LeftX);
+
+        RuntimeInputContext->MapKey(JumpAction, EKeys::SpaceBar);
+        RuntimeInputContext->MapKey(JumpAction, EKeys::W);
+        RuntimeInputContext->MapKey(JumpAction, EKeys::Up);
+        RuntimeInputContext->MapKey(JumpAction, EKeys::Gamepad_FaceButton_Bottom);
+
+        RuntimeInputContext->MapKey(DashAction, EKeys::LeftShift);
+        RuntimeInputContext->MapKey(DashAction, EKeys::Gamepad_FaceButton_Right);
+
+        RuntimeInputContext->MapKey(PauseAction, EKeys::Escape);
+        RuntimeInputContext->MapKey(PauseAction, EKeys::Gamepad_Special_Right);
+
+        RuntimeInputContext->MapKey(RestartAction, EKeys::R);
+        RuntimeInputContext->MapKey(RestartAction, EKeys::Gamepad_FaceButton_Top);
+
+        RuntimeInputContext->MapKey(FullscreenAction, EKeys::F11);
+        bRuntimeMappingsBuilt = true;
     }
 
+    APlayerController* PC = Cast<APlayerController>(Controller);
+    if (!PC)
+    {
+        return;
+    }
+
+    ULocalPlayer* LocalPlayer = PC->GetLocalPlayer();
+    if (!LocalPlayer)
+    {
+        return;
+    }
+
+    UEnhancedInputLocalPlayerSubsystem* Subsystem =
+        ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
+    if (!Subsystem)
+    {
+        return;
+    }
+
+    Subsystem->ClearAllMappings();
+    Subsystem->AddMappingContext(RuntimeInputContext, 0);
     bInputMapInstalled = true;
 }
 
@@ -255,6 +279,13 @@ void AScrapDashCharacter::RestartCheckpoint(const FInputActionValue& Value)
 
     if (AScrapDashGameMode* Mode = GetWorld()->GetAuthGameMode<AScrapDashGameMode>())
     {
+        if (Mode->IsLevelComplete())
+        {
+            const FString LevelName = UGameplayStatics::GetCurrentLevelName(this, true);
+            UGameplayStatics::OpenLevel(this, FName(*LevelName));
+            return;
+        }
+
         Mode->RespawnPlayer(this, false);
     }
 }
